@@ -57,4 +57,6 @@ PROJECT_NAME
 |  |- attacker
 |  |  |- Dockerfile
 |- test				# Folder containing a hook script and any supporting code to run the test. This is copied into every container
+|  |- test.py			# Provided script with hook functions. 
+|  |- exploit.py		# User provided implemention of exploit
 ```
