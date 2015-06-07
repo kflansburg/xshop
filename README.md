@@ -38,3 +38,23 @@ The templating system will substitute values in for the library and version bein
 
 When looking for which configuration files to use, the folder name with the highest specificity is used ( much like in CSS ). For example, a user is building Debian packages for the OpenSSL library, and has a folder, "debian" configured which successfully packages all versions, except for 0.9.1c. The user can create a new folder, "debian_0.9.1c" to specify rules for that specific version. Folders can have as many qualifiers as you like, separated by underscores. A capital X is used to signify a wildcard, mostly for version numbers. A qualifier that is just a wildcard will be ignored. In the event of a tie in the number of qualifiers which match a particular build, the order of selection is: Architecture > Version > Distribution > Release.
 
+## Project Layout
+
+### Build Project
+
+A build project is intended to assist in developing the configuration information necessary to build packages for many different versions of a library. 
+
+### Test Project
+
+A test project is intended to describe a particular CVE and test it against a library. The folder hierarchy is as follows:
+
+```
+PROJECT_NAME
+|- docker-compose.yml		# Docker Compose configuration file describing containers to build and launch to make a test environment
+|- containers			# Folder containing a subfolder for each container in the test environemnt with Dockerfile and any extra files to copy in
+|  |- target
+|  |  |- Dockerfile
+|  |- attacker
+|  |  |- Dockerfile
+|- test				# Folder containing a hook script and any supporting code to run the test. This is copied into every container
+```
