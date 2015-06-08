@@ -17,7 +17,7 @@
 
 * Utilize Docker to quickly construct containers to describe attack scenarios
 * Maintain repository of source packages. 
-    * Initially Debian, then ad RPM support
+    * Initially Debian, then add RPM support
     * Leverage package manager to satisfy dependencies
 
 ## Template System

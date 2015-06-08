@@ -23,6 +23,13 @@
 #
 
 #
+# 	Returns a list of files in `path` that have the correct
+#	format: root(_qual)*
+#
+def list_files(path, root):
+	pass
+
+#
 #	Looks for folders in `path` whose default name is `root`.
 # 	Filters to make sure that all qualifiers match the build
 # 	scenario outlined in dictionary `d`. Then selects the most
@@ -30,3 +37,14 @@
 #
 def select(path, root, d):
 	pass
+	# Generate a list of files with matching root
+
+	# Update with parsed qualifiers
+
+	# Check that all qualifiers match and detect rank
+
+	# Filter for files that entirely match
+
+	# Filter for max length
+
+	# If remaining list is longer than 1, filter by max rank
