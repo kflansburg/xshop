@@ -37,10 +37,22 @@ def list_files(path, root):
 	return files
 
 #
-# Takes a filename string and dictionary of build scenario. 
-# Checks that all qualifiers match the scenario, otherwise
-# return false. If all match, also computes highest rank of 
-# qualifier type (ARCH vs DIST, etc.).
+# 	This function takes a qualifier and returns whether it 
+# 	matches the attribute. This includes considering 'X' 
+# 	to be a wildcard and '-' and '_' to be equal.
+#
+def match(qual,attr):
+	# Escape input string, then substitute special chars with 
+	# regex
+	qual = re.escape(qual)
+	qual = "^"+qual.replace('X','.+').replace('\-','[-_]') + "$"
+	return re.compile(qual).match(attr)
+
+#
+# 	Takes a filename string and dictionary of build scenario. 
+# 	Checks that all qualifiers match the scenario, otherwise
+# 	return false. If all match, also computes highest rank of 
+# 	qualifier type (ARCH vs DIST, etc.).
 #
 def parse_qualifiers(filename,d):
 	RANKS = ['DIST','RELEASE','VERSION','ARCH']
