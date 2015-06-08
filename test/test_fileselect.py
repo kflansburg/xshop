@@ -67,13 +67,17 @@ class TestMatchMismatch(unittest.TestCase):
 class TestParseQualifiersBasic(unittest.TestCase):
 	def test(self):
 		d = {'DIST':'ubuntu','RELEASE':'vivid'}
-		self.assertEqual(fileselect.parse_qualifiers('debian_ubuntu_vivid',d),{'len':2,'rank':1})
+		ans = {'filename':'debian_ubuntu_vivid','len':2,'rank':1}
+		result = fileselect.parse_qualifiers('debian_ubuntu_vivid',d)
+		self.assertEqual(result,ans)
 
 # Check that the default folder with no qualifiers is parsed correctly
 class TestParseQualifiersDefault(unittest.TestCase):
 	def test(self):
 		d = {'DIST':'ubuntu','RELEASE':'vivid'}
-		self.assertEqual(fileselect.parse_qualifiers('debian',d),{'len':0,'rank':-1})
+		result = fileselect.parse_qualifiers('debian',d)
+		ans = {'filename':'debian','len':0,'rank':-1}
+		self.assertEqual(result,ans)
 
 # Check that a mismatch returns false
 class TestParseQualifiersMismatch(unittest.TestCase):

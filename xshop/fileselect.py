@@ -75,7 +75,7 @@ def parse_qualifiers(filename,d):
 			# If no match was found, reject file
 			return False
 
-	return {'len':len(quals), 'rank': RANK}
+	return {'filename':filename,'len':len(quals), 'rank': RANK}
 
 
 #
@@ -88,9 +88,8 @@ def select(path, root, d):
 	# Generate a list of files with matching root
 	files = list_files(path,root)
 
-	# Update with parsed qualifiers
-
-	# Check that all qualifiers match and detect rank
+	# Update with parsed 
+	files = map(lambda x: parse_qualifiers(x, d), files)
 
 	# Filter for files that entirely match
 
