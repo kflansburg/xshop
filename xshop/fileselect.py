@@ -56,7 +56,27 @@ def match(qual,attr):
 #
 def parse_qualifiers(filename,d):
 	RANKS = ['DIST','RELEASE','VERSION','ARCH']
-	pass
+	
+	RANK = -1
+	# Split qualifiers, ignoring root
+	quals = filename.split('_')[1:]
+
+	# For each qualifier, check what it matches
+	for q in quals:
+		m = False
+		for k in d.keys():
+			if match(q,d[k]):
+				# Match found, update rank if neccessary
+				m=True
+				if RANKS.index(k)>RANK:
+					RANK = RANKS.index(k)
+					break
+		if not m:
+			# If no match was found, reject file
+			return False
+
+	return {'len':len(quals), 'rank': RANK}
+
 
 #
 #	Looks for folders in `path` whose default name is `root`.

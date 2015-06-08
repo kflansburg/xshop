@@ -66,7 +66,20 @@ class TestMatchMismatch(unittest.TestCase):
 # Check that a typical string is parsed correctly
 class TestParseQualifiersBasic(unittest.TestCase):
 	def test(self):
-		pass
-	
+		d = {'DIST':'ubuntu','RELEASE':'vivid'}
+		self.assertEqual(fileselect.parse_qualifiers('debian_ubuntu_vivid',d),{'len':2,'rank':1})
+
+# Check that the default folder with no qualifiers is parsed correctly
+class TestParseQualifiersDefault(unittest.TestCase):
+	def test(self):
+		d = {'DIST':'ubuntu','RELEASE':'vivid'}
+		self.assertEqual(fileselect.parse_qualifiers('debian',d),{'len':0,'rank':-1})
+
+# Check that a mismatch returns false
+class TestParseQualifiersMismatch(unittest.TestCase):
+	def test(self):
+		d = {'DIST':'ubuntu','RELEASE':'oneric'}
+		self.assertFalse(fileselect.parse_qualifiers('debian_ubuntu_vivid',d))
+
 if __name__ == '__main__':
 	unittest.main()
