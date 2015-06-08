@@ -42,6 +42,11 @@ class TestListFilesOther(unittest.TestCase):
 
 	def tearDown(self):
 		shutil.rmtree('test_folder')
+
+# Check that a typical string is parsed correctly
+class TestParseQualifiersBasic(unittest.TestCase):
+	def test(self):
+		pass
 	
 if __name__ == '__main__':
 	unittest.main()

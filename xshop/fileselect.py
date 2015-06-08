@@ -37,6 +37,16 @@ def list_files(path, root):
 	return files
 
 #
+# Takes a filename string and dictionary of build scenario. 
+# Checks that all qualifiers match the scenario, otherwise
+# return false. If all match, also computes highest rank of 
+# qualifier type (ARCH vs DIST, etc.).
+#
+def parse_qualifiers(filename,d):
+	RANKS = ['DIST','RELEASE','VERSION','ARCH']
+	pass
+
+#
 #	Looks for folders in `path` whose default name is `root`.
 # 	Filters to make sure that all qualifiers match the build
 # 	scenario outlined in dictionary `d`. Then selects the most
