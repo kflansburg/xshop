@@ -22,12 +22,18 @@
 #		'0.9.1c'. Additionally, '-' will match both '-' and '_'.
 #
 
+import os
+import re
+
 #
 # 	Returns a list of files in `path` that have the correct
 #	format: root(_qual)*
 #
 def list_files(path, root):
-	pass
+	files = os.listdir(path)
+	regex = re.compile("^"+root+"(_[^\n_]+)*$")
+	files = filter(lambda x: regex.match(x),files)
+	return files
 
 #
 #	Looks for folders in `path` whose default name is `root`.
