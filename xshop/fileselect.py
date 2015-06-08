@@ -42,15 +42,22 @@ def list_files(path, root):
 #	specific folder name.
 #
 def select(path, root, d):
-	pass
-	# Generate a list of files with matching root
+	try:
+			# Generate a list of files with matching root
+			files = list_files(path,root)
 
-	# Update with parsed qualifiers
+			# Update with parsed qualifiers
 
-	# Check that all qualifiers match and detect rank
+			# Check that all qualifiers match and detect rank
 
-	# Filter for files that entirely match
+			# Filter for files that entirely match
 
-	# Filter for max length
+			# Filter for max length
 
-	# If remaining list is longer than 1, filter by max rank
+			# If remaining list is longer than 1, filter by max rank
+	except IOError as e:
+		print e
+		print "The path %s could not be found when selecting configuration files"%(path)
+	finally:
+		# Perform any cleanup
+		pass

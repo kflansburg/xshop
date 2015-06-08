@@ -42,7 +42,6 @@ class TestListFilesOther(unittest.TestCase):
 
 	def tearDown(self):
 		shutil.rmtree('test_folder')
-
-
+	
 if __name__ == '__main__':
 	unittest.main()
