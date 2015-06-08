@@ -57,26 +57,25 @@ def match(qual,attr):
 def parse_qualifiers(filename,d):
 	RANKS = ['DIST','RELEASE','VERSION','ARCH']
 	
-	RANK = -1
+	ranks=[]
 	# Split qualifiers, ignoring root
 	quals = filename.split('_')[1:]
 
 	# For each qualifier, check what it matches
 	for q in quals:
 		m = False
+		
 		for k in d.keys():
 			if match(q,d[k]):
 				# Match found, update rank if neccessary
 				m=True
-				if RANKS.index(k)>RANK:
-					RANK = RANKS.index(k)
-					break
+				ranks.append(RANKS.index(k))
+				break
 		if not m:
 			# If no match was found, reject file
 			return False
 
-	return {'filename':filename,'len':len(quals), 'rank': RANK}
-
+	return {'filename':filename,'len':len(quals), 'ranks': sorted(ranks)}
 
 #
 #	Looks for folders in `path` whose default name is `root`.
@@ -92,7 +91,10 @@ def select(path, root, d):
 	files = map(lambda x: parse_qualifiers(x, d), files)
 
 	# Filter for files that entirely match
-
+	files = filter( lambda x: x, files)
+	
 	# Filter for max length
+	best = reduce( lambda a,x: max(a,x['len']),files,0)
+	files = filter(lambda x: x['rank']==best, files)
 
-	# If remaining list is longer than 1, filter by max rank
+	return files

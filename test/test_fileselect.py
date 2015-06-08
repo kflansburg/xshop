@@ -67,7 +67,7 @@ class TestMatchMismatch(unittest.TestCase):
 class TestParseQualifiersBasic(unittest.TestCase):
 	def test(self):
 		d = {'DIST':'ubuntu','RELEASE':'vivid'}
-		ans = {'filename':'debian_ubuntu_vivid','len':2,'rank':1}
+		ans = {'filename':'debian_ubuntu_vivid','len':2,'ranks':[0,1]}
 		result = fileselect.parse_qualifiers('debian_ubuntu_vivid',d)
 		self.assertEqual(result,ans)
 
@@ -76,7 +76,7 @@ class TestParseQualifiersDefault(unittest.TestCase):
 	def test(self):
 		d = {'DIST':'ubuntu','RELEASE':'vivid'}
 		result = fileselect.parse_qualifiers('debian',d)
-		ans = {'filename':'debian','len':0,'rank':-1}
+		ans = {'filename':'debian','len':0,'ranks':[]}
 		self.assertEqual(result,ans)
 
 # Check that a mismatch returns false
@@ -84,6 +84,19 @@ class TestParseQualifiersMismatch(unittest.TestCase):
 	def test(self):
 		d = {'DIST':'ubuntu','RELEASE':'oneric'}
 		self.assertFalse(fileselect.parse_qualifiers('debian_ubuntu_vivid',d))
+
+#
+#	Integration testing for main function
+#
+class TestSelect(unittest.TestCase):
+	def setUp(self):
+		pass
+
+	def test(self):
+		pass
+	
+	def tearDown(self):
+		pass
 
 if __name__ == '__main__':
 	unittest.main()
