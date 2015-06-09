@@ -1,0 +1,44 @@
+FROM xshop:base_test_image
+
+#
+# Installation
+#
+
+WORKDIR /home/
+
+{% if install_type=='source' %}
+    RUN apt-get -y build-dep {{ library }}
+
+    ADD {{ library }}-{{ version }}.tar.gz /home/
+    WORKDIR /home/{{ library }}-{{ version }}
+
+    RUN ./Configure
+    RUN make
+    RUN make install
+
+{% elif install_type='debian %}
+    ADD {{ library }}-{{ version }} /home/
+
+    RUN dpkg -i {{ library }}_{{ version }}-1_{{ arch }}.deb
+    RUN apt-get -y install -f
+
+{% else %}
+    RUN apt-get -y install {{ library }}={{ version }}-1
+
+{% endif %}
+
+#
+#   Add any configuration for the software
+#
+
+#
+#   Install testing code
+#
+ADD test /home/
+
+
+#
+#   Add long running command to start service, a dummy
+#   loop is provided for testing libraries
+#
+CMD python2 -c "import test;test.daemon()"
