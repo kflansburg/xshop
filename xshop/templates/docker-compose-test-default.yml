@@ -1,0 +1,6 @@
+attacker:
+  build: containers/attacker/
+  links:
+    - target
+target:
+  build: containers/target/
