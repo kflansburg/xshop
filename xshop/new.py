@@ -42,6 +42,7 @@ def new_test_project(name):
 	if os.path.isdir(name) or os.path.isfile(name):
 		raise OSError('Folder %s already exists'%(name,))
 
+
 	# Folder Structure
 	os.mkdir(name)
 	os.mkdir(name+"/containers")
@@ -50,7 +51,6 @@ def new_test_project(name):
 	os.mkdir(name+"/test")
 	
 	# Copy in default files
-
 #
 #	Generates a new directory, `name` with the required
 #	structure for a build project as described above and 
