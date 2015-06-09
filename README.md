@@ -46,7 +46,7 @@ RUN apt-get -y install {{pack}}
 {% endfor %}
 ```
 
-Each build scenario containers the following variables: `ARCH` (ex. amd64), `DIST` (ex. vivid), `RELEASE` (ex. vivid), `VERSION` (ex. 1.0.1-beta1).  
+Each build scenario containers the following variables: `ARCH` (ex. amd64), `DIST` (ex. ubuntu), `RELEASE` (ex. vivid), `VERSION` (ex. 1.0.1-beta1).  
 ## Project Layout
 
 ### Build Project
