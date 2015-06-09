@@ -1,0 +1,10 @@
+FROM xshop:base_test_image
+
+WORKDIR /home/
+
+#
+#	Add test files
+#
+ADD test /home/
+
+CMD python2 -c "import test;test.daemon()"
