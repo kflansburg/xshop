@@ -69,3 +69,13 @@ PROJECT_NAME
 |  |- test.py			# Provided script with hook functions. 
 |  |- exploit.py		# User provided implemention of exploit
 ```
+
+## Testing
+
+Tests are written using Python's `unittest` module. They are not exhaustive but descibe the main desired functionality. Edge cases will be added as they are discovered. 
+
+Integration testing should ensure that changes don't break the main functionality for typical cases.
+
+To run tests, from the root project directory:
+
+`python -m unittest discover`

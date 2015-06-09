@@ -29,6 +29,8 @@
 #		|	|-.pbuilderrc
 #
 
+import os
+
 #
 #	Generates a new directory, `name` with the required
 #	structure for a test project as described above and 
@@ -36,7 +38,14 @@
 #
 
 def new_test_project(name):
-	pass
+	if os.path.isdir(name) or os.path.isfile(name):
+		raise OSError('Folder %s already exists'%(name,))
+
+	os.mkdir(name)
+	os.mkdir(name+"/containers")
+	os.mkdir(name+"/containers/target")
+	os.mkdir(name+"/containers/attacker")
+	os.mkdir(name+"/test")
 
 #
 #	Generates a new directory, `name` with the required
@@ -44,4 +53,10 @@ def new_test_project(name):
 #	copies any templates in. 
 #
 def new_build_project(name):
-	pass
+	if os.path.isdir(name) or os.path.isfile(name):
+		raise OSError('Folder %s already exists'%(name,))
+
+	os.mkdir(name)
+	os.mkdir(name+"/source")
+	os.mkdir(name+"/packages")
+	os.mkdir(name+"/config")

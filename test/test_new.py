@@ -1,15 +1,20 @@
 import unittest
 from xshop import new
+import os
+import shutil
 
-class Test1(unittest.TestCase):
+class TestFileExists(unittest.TestCase):
 	def setUp(self):
-		pass
+		os.mkdir('new-test')
 
 	def test(self):
-		pass
+		with self.assertRaises(OSError):
+			new.new_test_project('new-test')
+		with self.assertRaises(OSError):
+			new.new_build_project('new-test')
 
 	def tearDown(self):
-		pass
+		shutil.rmtree('new-test')
 
 if __name__ == '__main__':
 	unittest.main()
