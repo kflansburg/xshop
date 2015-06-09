@@ -10,22 +10,47 @@
 #		if any template elements remain in the file.
 #
 
+import jinja2
+templateLoader = jinja2.FileSystemLoader( searchpath="." )
+templateEnv = jinja2.Environment( loader=templateLoader )
+import os
+import shutil
+
 #
 #	Replaces substitutions within a file. Destructive
 #
 def template_file(path,d):
-	pass
+	template = templateEnv.get_template( path )
+	templateVars = d
+	output = template.render( templateVars )
+	os.remove(path)
+	f = open(path,'w')
+	f.write(output)
+	f.close()
 
 #
 #	Traverses a folder and runs template_file on each
 #	file found. Destructive
 #
 def template_folder(path,d):
-	pass
+	if os.path.isfile(path):
+		# File
+		template_file(path,d)
+	else:
+		files = os.listdir(path)
+		for f in files:
+			template_folder(path+'/'+f,d)	
 
 #
 #	Accepts a file or folder `path`, copies it to
 #	`output`, and then applies templating in place.
 #
-def template_and_copy(path,output,d):
-	pass
+def copy_and_template(path,output,d):
+	if os.path.isdir(path):
+		# Folder
+		shutil.copytree(path,output)
+		template_folder(output, d)	
+	else:
+		# Single File
+		shutil.copy2(path,output)
+		template_file(output,d)
