@@ -51,7 +51,7 @@ class TestParseDockerCompose(unittest.TestCase):
 
 	def tearDown(self):
 		pass
-#		os.remove('docker-compose.yml')
+		os.remove('docker-compose.yml')
 
 if __name__ == '__main__':
 	unittest.main()

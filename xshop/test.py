@@ -5,6 +5,12 @@
 #		which carry out verious testing scenarios. The 
 #		default test works as follows:
 #	
+#		Duplicate the docker compose context
+#
+#		Apply templating to populate values
+#
+#		Copy testing scripts into all build contexts
+#	
 #		Call docker compose to set up the test environment
 #		
 #		Call testing hooks for specified container
@@ -44,16 +50,22 @@ def parse_docker_compose():
 		if m:	
 			containers.append(m.group(1))
 	return containers
+
 #
 #	This function reads in the docker-compose.yml and uses
 #	build_context() to construct each of the required
 #	contexts.
 #
-def prepare_build(containers):
+def prepare_build(containers,d):
 	# Create temporary compose folder
 	os.mkdir('build-tmp')
 	# Copy docker-compose.yml
+	shutil.copy2('docker-compose.yml','build-tmp/docker-compose.yml')
+
 	# Constuct each context
+	for container in containers:
+		os.mkdir('build-tmp/'+container)
+		build_context(container,d)
 	
 	# Move into temporary directory
 	os.chdir('build.tmp')
@@ -63,13 +75,10 @@ def prepare_build(containers):
 # 	up any ephemeral contexts, containers, or images that 
 #	may be created during a test
 #
-def clean_build():
+def clean_build(containers):
 	# Remove temporary compose folder
 	os.chdir('..')
 	shutil.rmtree('build-tmp')
-
-	# Remove containers created
-	pass
 
 #
 #	This function is intended to be the main script for i
