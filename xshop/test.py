@@ -18,6 +18,9 @@
 #	relevant files and populates the template with values.
 #
 def build_context():
+	# Create folder
+	# Apply template
+	# Copy in payload
 	pass
 
 #
@@ -26,6 +29,19 @@ def build_context():
 #	contexts.
 #
 def prepare_build():
+	# Create temporary compose folder
+	# Copy docker-compose.yml
+	# Constuct each context
+	pass
+
+#
+# 	This function reads the docker-compose.yml and cleans
+# 	up any ephemeral contexts, containers, or images that 
+#	may be created during a test
+#
+def clean_build():
+	# Remove temporary compose folder
+	# Remove containers created
 	pass
 
 #
@@ -33,4 +49,7 @@ def prepare_build():
 #	running a test.
 #
 def run_test():
+	# Prepare Build
+	# Call hook
+	# Clean up
 	pass
