@@ -59,16 +59,17 @@ def parse_docker_compose():
 def prepare_build(containers,d):
 	# Create temporary compose folder
 	os.mkdir('build-tmp')
+	os.mkdir('build-tmp/containers')
+
 	# Copy docker-compose.yml
 	shutil.copy2('docker-compose.yml','build-tmp/docker-compose.yml')
 
 	# Constuct each context
 	for container in containers:
-		os.mkdir('build-tmp/'+container)
 		build_context(container,d)
 	
 	# Move into temporary directory
-	os.chdir('build.tmp')
+	os.chdir('build-tmp')
 
 #
 # 	This function reads the docker-compose.yml and cleans

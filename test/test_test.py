@@ -9,6 +9,9 @@ def make_sample_config():
 	f = open('containers/target/Dockerfile','w')
 	f.write("{{ foo }}")
 	f.close()
+	f = open('docker-compose.yml','w')
+	f.write('target:\n  build: containers/target/\n')
+	f.close()
 	os.mkdir('test')
 	f = open('test/test.py','w') 
 	f.write('foobar')
@@ -52,6 +55,47 @@ class TestParseDockerCompose(unittest.TestCase):
 	def tearDown(self):
 		pass
 		os.remove('docker-compose.yml')
+
+class TestPrepare_Build(unittest.TestCase):
+	def setUp(self):
+		os.mkdir('prepare-build-test')
+		os.chdir('prepare-build-test')
+		make_sample_config()
+	
+	def test(self):
+		test.prepare_build(['target'],{'foo':'bar'})
+
+		os.chdir('..')
+		
+		# Check folder structure
+		self.assertTrue(os.path.isdir('build-tmp'))
+		self.assertTrue(os.path.isdir('build-tmp/containers'))
+
+		# Check that docker compose file was copied
+		f = open('build-tmp/docker-compose.yml')
+		self.assertEqual(f.read(),'target:\n  build: containers/target/\n')
+		f.close()
+
+		# Check that build_context was called for target
+		self.assertTrue(os.path.isdir('build-tmp/containers/target'))
+
+		# Check that dictionary was passed to template
+		f = open('build-tmp/containers/target/Dockerfile','r')
+		self.assertEqual(f.read(),'bar')
+		f.close()
+
+	def tearDown(self):
+		os.chdir('..')
+#		shutil.rmtree('prepare-build-test')
+
+class TestCleanBuild(unittest.TestCase):
+	def setUp(self):
+		os.mkdir('build-tmp')
+		os.chdir('build-tmp')
+	
+	def test(self):
+		test.clean_build([])
+		self.assertFalse(os.path.exists('build-tmp'))
 
 if __name__ == '__main__':
 	unittest.main()
