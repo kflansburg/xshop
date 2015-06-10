@@ -13,6 +13,22 @@
 #
 
 #
+#	This function assembles the build context for a given 
+#	container. It creates a temporary context, copies in
+#	relevant files and populates the template with values.
+#
+def build_context():
+	pass
+
+#
+#	This function reads in the docker-compose.yml and uses
+#	build_context() to construct each of the required
+#	contexts.
+#
+def prepare_build():
+	pass
+
+#
 #	This function is intended to be the main script for i
 #	running a test.
 #
