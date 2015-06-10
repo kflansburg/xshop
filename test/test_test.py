@@ -86,7 +86,7 @@ class TestPrepare_Build(unittest.TestCase):
 
 	def tearDown(self):
 		os.chdir('..')
-#		shutil.rmtree('prepare-build-test')
+		shutil.rmtree('prepare-build-test')
 
 class TestCleanBuild(unittest.TestCase):
 	def setUp(self):

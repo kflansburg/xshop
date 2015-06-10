@@ -29,6 +29,8 @@ import re
 #	relevant files and populates the template with values.
 #
 def build_context(name,d):
+	d['container_name']=name
+	
 	# Copy folder and apply template
 	template.copy_and_template('containers/'+name, 'build-tmp/containers/'+name,d)
 
@@ -85,8 +87,30 @@ def clean_build(containers):
 #	This function is intended to be the main script for i
 #	running a test.
 #
-def run_test():
+def run_test(library, version, install_type):
+	# Get containers
+	containers = parse_docker_compose()
+
+	# Generate template dictionary	
+	d = {'library':library,
+		'version':version,
+		'install_type':install_type}
+
 	# Prepare Build
+	prepare_build(containers,d)
+
+	# Check for base test image	
+		# TODO - Write docker.build_base_test_image() and 
+		# add that dockerfile to defaults 
+
+	# Run Docker Compose
+		# TODO - Add docker compose wrapper with error 
+		# checking. 
+
 	# Call hook
+		# TODO - Add docker hook wrapper with error and
+		# and result checking
+		# TODO - Change hook to check environment variable
+
 	# Clean up
-	pass
+	clean_build(containers)
