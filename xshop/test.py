@@ -12,16 +12,20 @@
 #		Return results of test and clean up
 #
 
+from xshop import template
+import shutil
+
 #
 #	This function assembles the build context for a given 
 #	container. It creates a temporary context, copies in
 #	relevant files and populates the template with values.
 #
-def build_context():
-	# Create folder
-	# Apply template
-	# Copy in payload
-	pass
+def build_context(name,d):
+	# Copy folder and apply template
+	template.copy_and_template('containers/'+name, 'build-tmp/containers/'+name,d)
+
+	# Copy in test folder
+	shutil.copytree('test','build-tmp/containers/'+name+'/test')
 
 #
 #	This function reads in the docker-compose.yml and uses
