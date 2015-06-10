@@ -1,0 +1,14 @@
+Source: {{ library }}
+Section: misc
+Priority: optional
+Maintainer: {{ name }} <{{ email }}>
+Build-Depends: debhelper (>= 9){% for pack in build-deps %}, {{ pack }}{% endfor %}
+Standards-Version: 3.9.6
+Homepage: {{ homepage }}
+
+Package: {{ library %}
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}{% for pack in desp %}, {{ pack }}{% endfor %}
+Description: Legacy {{ library }}
+ Legacy version of {{ library }} used for 
+ security research. Do not use in production. 

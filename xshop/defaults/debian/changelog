@@ -1,0 +1,5 @@
+{{ library }} ({{ version }}-1) {{ release}}; urgency=low
+
+  * Initial release
+
+ -- {{ name }} <{{ email }}>  Fri, 15 May 2015 03:56:02 +0000
