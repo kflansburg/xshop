@@ -14,6 +14,8 @@
 
 from xshop import template
 import shutil
+import os
+import re
 
 #
 #	This function assembles the build context for a given 
@@ -28,15 +30,33 @@ def build_context(name,d):
 	shutil.copytree('test','build-tmp/containers/'+name+'/test')
 
 #
+#	A rudimentary attempt to parse only the names of 
+#	containers from a docker-compose.yml file without
+#	having to add a yaml parsing library.
+#
+def parse_docker_compose():
+	regex = re.compile("^([\S]+):\n")
+
+	containers = []
+	f = open('docker-compose.yml')
+	for line in f.readlines():
+		m = regex.match(line)
+		if m:	
+			containers.append(m.group(1))
+	return containers
+#
 #	This function reads in the docker-compose.yml and uses
 #	build_context() to construct each of the required
 #	contexts.
 #
-def prepare_build():
+def prepare_build(containers):
 	# Create temporary compose folder
+	os.mkdir('build-tmp')
 	# Copy docker-compose.yml
 	# Constuct each context
-	pass
+	
+	# Move into temporary directory
+	os.chdir('build.tmp')
 
 #
 # 	This function reads the docker-compose.yml and cleans
@@ -45,6 +65,9 @@ def prepare_build():
 #
 def clean_build():
 	# Remove temporary compose folder
+	os.chdir('..')
+	shutil.rmtree('build-tmp')
+
 	# Remove containers created
 	pass
 
