@@ -1,5 +1,7 @@
 FROM xshop:base_test_image
 
+ENV {{ container_name }} CONTAINER_NAME
+
 WORKDIR /home/
 
 #
