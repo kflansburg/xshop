@@ -36,6 +36,14 @@ class TestImageExistsNo(unittest.TestCase):
 	def test(self):
 		self.assertFalse(dockerw.image_exists('xshop:image_exists_test'))
 
+class TestContainerRunning(unittest.TestCase):
+	def test(self):
+		pass #TODO
+
+class TestRunHook(unittest.TestCase):
+	def test(self):
+		pass #TODO
+
 p = os.path.dirname(os.path.realpath(dockerw.__file__))+"/defaults/contexts/"
 
 #

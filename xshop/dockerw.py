@@ -24,9 +24,9 @@ from xshop import exceptions
 #	Checks whether a container name exists, running
 #	or not
 #
-def container_exists(name):
+def container_exists(name,all=True):
 	c = Client(base_url='unix://var/run/docker.sock')
-	containers = c.containers(all=True)
+	containers = c.containers(all=all)
 	for container in containers:
 		names = container["Names"]
 		for n in names:
@@ -57,9 +57,12 @@ def compose_up():
 #	Runs a given hook in a running container and return
 #	results
 #
-def run_hook():
-	pass
-
+def run_hook(container,hook):
+	if not container_exists(container,all=False):
+		raise DockerError('Container '+container+' not running, cannot run hook')
+	
+	
+	
 #
 #	Build contexts for some default images to be used are 
 # 	stored in xshop/defaults/contexts/<image_name>. This
