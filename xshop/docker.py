@@ -14,6 +14,8 @@
 #		in functionality. 
 #
 
+import os
+
 #
 #	Checks whether a container name exists, running
 #	or not
@@ -41,7 +43,17 @@ def run_hook():
 	pass
 
 #
-#	Builds a specified dockerfile
+#	Build contexts for some default images to be used are 
+# 	stored in xshop/defaults/contexts/<image_name>. This
+#	function builds the specified image. 
 #
-def build_image():
-	pass
+def build_image(image_name):
+	xshop_path = os.path.dirname(os.path.realpath(__file__))
+	context_path = xshop_path+"/defaults/contexts/"+image_name
+
+	# Check that a build context exists
+	if not os.path.isdir(context_path):
+		raise IOError('Image context not found')
+	if not os.path.isfile(context_path+"/Dockerfile"):
+		raise IOError('Dockerfile not found in context')
+
