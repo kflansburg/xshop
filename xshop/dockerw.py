@@ -14,7 +14,11 @@
 #		in functionality. 
 #
 
+import logging
 import os
+from docker import Client
+import json
+from xshop import exceptions
 
 #
 #	Checks whether a container name exists, running
@@ -57,3 +61,13 @@ def build_image(image_name):
 	if not os.path.isfile(context_path+"/Dockerfile"):
 		raise IOError('Dockerfile not found in context')
 
+	# Call docker build, catching errors
+	c = Client(base_url='unix://var/run/docker.sock')
+	c.ping()
+	for line in c.build(path=context_path, rm=True, tag='xshop:'+image_name):
+		d = json.loads(line)
+		if 'stream' in d:		
+			logging.info(d['stream'])
+		if 'error' in d:
+			logging.critical(d['error'])
+			raise exceptions.DockerError('Building '+image_name+' failed: '+d['error'])
