@@ -26,3 +26,22 @@ def container_exists():
 #
 def image_exists():
 	pass
+
+#
+# 	Calls docker compose on a supplied compose file
+#
+def compose_up():
+	pass
+
+#
+#	Runs a given hook in a running container and return
+#	results
+#
+def run_hook():
+	pass
+
+#
+#	Builds a specified dockerfile
+#
+def build_image():
+	pass
