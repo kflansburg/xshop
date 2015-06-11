@@ -24,14 +24,28 @@ from xshop import exceptions
 #	Checks whether a container name exists, running
 #	or not
 #
-def container_exists():
-	pass
+def container_exists(name):
+	c = Client(base_url='unix://var/run/docker.sock')
+	containers = c.containers(all=True)
+	for container in containers:
+		names = container["Names"]
+		for n in names:
+			if n=='/'+name or n == name or n==name+"\\":
+				return True
+	return False
 
 #
 #	Checks whether an image exists
 #
-def image_exists():
-	pass
+def image_exists(name):
+	c = Client(base_url='unix://var/run/docker.sock')
+	images = c.images()
+	for image in images:
+		tags = image['RepoTags']
+		for tag in tags:
+			if tag==name:
+				return True
+	return False
 
 #
 # 	Calls docker compose on a supplied compose file

@@ -4,6 +4,37 @@ from xshop import exceptions
 import os
 import shutil
 import logging
+from subprocess import call as sh
+
+class TestContainerExistsYes(unittest.TestCase):
+	def setUp(self):
+		self.f = open('/dev/null', 'w')
+		sh(['docker','run','--name=container_exists_test','debian:stable','ls'],stderr=self.f,stdout=self.f)
+
+	def test(self):
+		self.assertTrue(dockerw.container_exists('container_exists_test'))
+
+	def tearDown(self):
+		sh(['docker','rm','container_exists_test'],stderr=self.f,stdout=self.f)
+
+class TestContainerExistsNo(unittest.TestCase):
+	def test(self):
+		self.assertFalse(dockerw.container_exists('container_exists_test'))
+
+class TestImageExistsYes(unittest.TestCase):
+	def setUp(self):
+		self.f = open('/dev/null', 'w')
+		sh(['docker','tag','debian:stable','xshop:image_exists_test'],stderr=self.f,stdout=self.f)
+
+	def test(self):
+		self.assertTrue(dockerw.image_exists('xshop:image_exists_test'))
+
+	def tearDown(self):
+		sh(['docker','rmi','xshop:image_exists_test'],stderr=self.f,stdout=self.f)
+
+class TestImageExistsNo(unittest.TestCase):
+	def test(self):
+		self.assertFalse(dockerw.image_exists('xshop:image_exists_test'))
 
 p = os.path.dirname(os.path.realpath(dockerw.__file__))+"/defaults/contexts/"
 
