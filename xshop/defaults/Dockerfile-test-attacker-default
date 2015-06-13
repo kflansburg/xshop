@@ -9,4 +9,4 @@ WORKDIR /home/
 #
 ADD test /home/
 
-CMD python2 -c "import test;test.daemon()"
+CMD /sbin/init
