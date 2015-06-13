@@ -1,5 +1,5 @@
 #
-#	docker
+#	dockerw
 #
 #		This module provides some conveniance classes
 #		for interacting with docker. In most cases
