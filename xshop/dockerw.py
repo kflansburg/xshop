@@ -20,7 +20,6 @@ from docker import Client
 import json
 from xshop import exceptions
 from xshop import test
-from xshop.loggerwrapper import LoggerWriter
 import subprocess
 from subprocess import Popen as sh
 
