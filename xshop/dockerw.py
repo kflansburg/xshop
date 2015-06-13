@@ -19,6 +19,10 @@ import os
 from docker import Client
 import json
 from xshop import exceptions
+from xshop import test
+from xshop.loggerwrapper import LoggerWriter
+import subprocess
+from subprocess import Popen as sh
 
 #
 #	Checks whether a container name exists, running
@@ -33,6 +37,12 @@ def container_exists(name,all=True):
 			if n=='/'+name or n == name or n==name+"\\":
 				return True
 	return False
+
+#
+#	Wrapper for easily checking if container is running
+#
+def container_running(name):
+	return container_exists(name,all=False)
 
 #
 #	Checks whether an image exists
@@ -51,17 +61,48 @@ def image_exists(name):
 # 	Calls docker compose on a supplied compose file
 #
 def compose_up():
-	pass
+	#TODO check for errors from docker
+	process = sh(['docker-compose','-p','xshop','build'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	output,_ = process.communicate()
+	logging.info(output)
+	process = sh(['docker-compose','-p','xshop','up','-d'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	output,_ = process.communicate()
+	logging.info(output)
+
+#
+#	Function to clean up a test environemnt
+#
+def compose_down():
+	#TODO check for errors from docker
+	# Get list of project containers
+	containers = test.parse_docker_compose()
+	
+	# Kill each one. Docker-compose kill can be ineffective
+	containers = map(lambda c: "xshop_"+c+"_1", containers)
+	for c in containers:
+		process = sh(['docker','kill',c],stdout=subprocess.PIPE)	
+		output,_ = process.communicate()
+		logging.info(output)
 
 #
 #	Runs a given hook in a running container and return
 #	results
 #
 def run_hook(container,hook):
-	if not container_exists(container,all=False):
+	#TODO Test
+	if not container_running(container):
 		raise DockerError('Container '+container+' not running, cannot run hook')
 	
-	
+	c = Client(base_url='unix://var/run/docker.sock')
+
+	# Create exec
+	job = c.exec_create(container, 'python2 -c "import test;import sys;sys.exit(test.'+hook+'())')	
+
+	# Run 	
+	for line in c.exec_start(job,stream=True):
+		logging.info(line)
+
+	print c.exec_inspect(job)
 	
 #
 #	Build contexts for some default images to be used are 
