@@ -60,28 +60,36 @@ def image_exists(name):
 # 	Calls docker compose on a supplied compose file
 #
 def compose_up():
-	#TODO check for errors from docker
 	process = sh(['docker-compose','-p','xshop','build'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	output,_ = process.communicate()
-	logging.info(output)
+	stdout,stderr = process.communicate()
+	logging.info(stdout)
+	if process.returncode:
+		compose_down()
+		raise exceptions.DockerError(stderr)
+
 	process = sh(['docker-compose','-p','xshop','up','-d'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	output,_ = process.communicate()
-	logging.info(output)
+	stdout,stderr = process.communicate()
+	logging.info(stdout)
+	if process.returncode:
+		compose_down()
+		raise exceptions.DockerError(stderr)
 
 #
 #	Function to clean up a test environemnt
 #
 def compose_down():
-	#TODO check for errors from docker
 	# Get list of project containers
 	containers = test.parse_docker_compose()
 	
 	# Kill each one. Docker-compose kill can be ineffective
 	containers = map(lambda c: "xshop_"+c+"_1", containers)
 	for c in containers:
-		process = sh(['docker','kill',c],stdout=subprocess.PIPE)	
-		output,_ = process.communicate()
-		logging.info(output)
+		if container_exists(c):
+			process = sh(['docker','kill',c],stdout=subprocess.PIPE)	
+			stdout,stderr = process.communicate()
+			logging.info(stdout)
+			if process.returncode:
+				raise exceptions.DockerError(stderr)
 
 #
 #	Runs a given hook in a running container and return

@@ -113,7 +113,7 @@ def create_test_project(ret):
 	os.mkdir('Project_Name/containers/target')
 	os.mkdir('Project_Name/containers/attacker')
 	os.mkdir('Project_Name/test')
-	f = open('Project_Name/containers/attacker/Dockerfile','w')
+	f = open('Project_Name/containers/target/Dockerfile','w')
 	f.write('FROM debian:stable\nCMD /bin/bash -c "while true; do sleep 1; done"')
 	f.close()	
 	f = open('Project_Name/test/test.py','w')
@@ -127,7 +127,7 @@ def create_test_project(ret):
 class TestComposeUpGood(unittest.TestCase):
 	def setUp(self):
 		create_test_project(0)
-		f = open('Project_Name/containers/target/Dockerfile','w')
+		f = open('Project_Name/containers/attacker/Dockerfile','w')
 		f.write('FROM debian:stable\nCMD /bin/bash -c "while true; do sleep 1; done"')
 		f.close()
 		os.chdir('Project_Name')
@@ -144,7 +144,46 @@ class TestComposeUpGood(unittest.TestCase):
 	def tearDown(self):
 		os.chdir('..')
 		shutil.rmtree('Project_Name')
-		
+
+#
+#	Test that compose_down can handle when containers
+#	aren't running
+#
+class TestComposeDown(unittest.TestCase):
+	def setUp(self):
+		create_test_project(0)
+		os.chdir('Project_Name')
+		os.remove('docker-compose.yml')
+		f = open('docker-compose.yml','w')
+		f.write('foobar:\n  build: .\n')
+		f.close()
+	def test(self):
+		self.assertFalse(dockerw.compose_down())
+	def tearDown(self):
+		os.chdir('..')
+		shutil.rmtree('Project_Name')
+
+#
+#	Test that compose up throws a dockererror when 
+#	a build fails
+#
+class TestComposeUpBad(unittest.TestCase):
+	def setUp(self):
+		create_test_project(0)
+		os.chdir('Project_Name')
+	def test(self):
+		with self.assertRaises(exceptions.DockerError):
+			dockerw.compose_up()
+		self.assertFalse(dockerw.container_running('xshop_target_1'))
+		self.assertFalse(dockerw.container_running('xshop_attacker_1'))
+
+	def tearDown(self):
+		os.chdir('..')
+		shutil.rmtree('Project_Name')
+
+class RemoveLog(unittest.TestCase):
+	def test(self):
+		os.remove('test.log')
 
 if __name__ == '__main__':
 	unittest.main()
