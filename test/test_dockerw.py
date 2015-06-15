@@ -107,16 +107,17 @@ class TestBuildImageBuildError(unittest.TestCase):
 #	test.py must still be populated
 #
 def create_test_project(ret):
+	dockerw.build_image('base_test_image')
 	os.mkdir('Project_Name')
 	shutil.copy2('xshop/defaults/docker-compose-test-default.yml','Project_Name/docker-compose.yml')
 	os.mkdir('Project_Name/containers')
 	os.mkdir('Project_Name/containers/target')
 	os.mkdir('Project_Name/containers/attacker')
-	os.mkdir('Project_Name/test')
+	os.mkdir('Project_Name/containers/target/test')
 	f = open('Project_Name/containers/target/Dockerfile','w')
-	f.write('FROM debian:stable\nCMD /bin/bash -c "while true; do sleep 1; done"')
+	f.write('FROM xshop:base_test_image\nWORKDIR /home/\nADD test /home/\nCMD /bin/bash -c "while true; do sleep 1; done"')
 	f.close()	
-	f = open('Project_Name/test/test.py','w')
+	f = open('Project_Name/containers/target/test/xshop_test.py','w')
 	f.write('def run_exploit():\n\treturn ' + str(ret))
 	f.close()
 
@@ -157,8 +158,10 @@ class TestComposeDown(unittest.TestCase):
 		f = open('docker-compose.yml','w')
 		f.write('foobar:\n  build: .\n')
 		f.close()
+
 	def test(self):
 		self.assertFalse(dockerw.compose_down())
+
 	def tearDown(self):
 		os.chdir('..')
 		shutil.rmtree('Project_Name')
@@ -171,6 +174,7 @@ class TestComposeUpBad(unittest.TestCase):
 	def setUp(self):
 		create_test_project(0)
 		os.chdir('Project_Name')
+
 	def test(self):
 		with self.assertRaises(exceptions.DockerError):
 			dockerw.compose_up()
@@ -181,8 +185,46 @@ class TestComposeUpBad(unittest.TestCase):
 		os.chdir('..')
 		shutil.rmtree('Project_Name')
 
+#
+#	Test that running a hook returns the correct 
+#	value
+#
+class TestRunningHook(unittest.TestCase):
+	def setUp(self):
+		create_test_project(132)
+		f = open('Project_Name/containers/attacker/Dockerfile','w')
+                f.write('FROM debian:stable\nCMD /bin/bash -c "while true; do sleep 1; done"')
+                f.close()
+                os.chdir('Project_Name')
+		dockerw.compose_up()
+
+	def test(self):
+		self.assertEqual(dockerw.run_hook('xshop_target_1','run_exploit'),132)
+
+	def tearDown(self):
+		dockerw.compose_down()
+		os.chdir('..')
+		shutil.rmtree('Project_Name')
+
+#
+#	Test that running hook on nonrunning container
+#	raises dockererror
+#
+class TestRunningHookBad(unittest.TestCase):
+	def setUp(self):
+		self.f = open('/dev/null')
+		sh(['docker','run','-t','-i','--name=run_hook_test','debian:stable','ls'],stderr=self.f,stdout=self.f)
+
+	def test(self):
+		with self.assertRaises(exceptions.DockerError):
+			dockerw.run_hook('run_hook_test','run_exploit')
+	
+	def tearDown(self):
+		self.f.close()
+
 class RemoveLog(unittest.TestCase):
 	def test(self):
+		pass
 		os.remove('test.log')
 
 if __name__ == '__main__':

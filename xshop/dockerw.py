@@ -64,7 +64,6 @@ def compose_up():
 	stdout,stderr = process.communicate()
 	logging.info(stdout)
 	if process.returncode:
-		compose_down()
 		raise exceptions.DockerError(stderr)
 
 	process = sh(['docker-compose','-p','xshop','up','-d'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
@@ -96,20 +95,19 @@ def compose_down():
 #	results
 #
 def run_hook(container,hook):
-	#TODO Test
 	if not container_running(container):
-		raise DockerError('Container '+container+' not running, cannot run hook')
+		raise exceptions.DockerError('Container '+container+' not running, cannot run hook')
 	
 	c = Client(base_url='unix://var/run/docker.sock')
 
 	# Create exec
-	job = c.exec_create(container, 'python2 -c "import test;import sys;sys.exit(test.'+hook+'())')	
+	job = c.exec_create(container, 'python2 -c "import xshop_test;import sys;sys.exit(xshop_test.'+hook+'())"')	
 
 	# Run 	
 	for line in c.exec_start(job,stream=True):
 		logging.info(line)
 
-	print c.exec_inspect(job)
+	return c.exec_inspect(job)['ExitCode']
 	
 #
 #	Build contexts for some default images to be used are 
