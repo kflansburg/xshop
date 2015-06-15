@@ -51,6 +51,13 @@ def new_test_project(name):
 	os.mkdir(name+"/test")
 	
 	# Copy in default files
+	xshop_path = os.path.dirname(os.path.realpath(__file__))
+	shutil.copy2(xshop_path+"/defaults/docker-compose-test-default.yml",name+'/docker-compose.yml')
+	shutil.copy2(xshop_path+"/defaults/xshop_test-default.py",name+'/test/xshop_test.py')
+	shutil.copy2(xshop_path+"/defaults/Dockerfile-test-attacker-default",name+'/containers/attacker/Dockerfile')
+	shutil.copy2(xshop_path+"/defaults/Dockerfile-test-target-default",name+'/containers/target/Dockerfile')
+
+
 #
 #	Generates a new directory, `name` with the required
 #	structure for a build project as described above and 

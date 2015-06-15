@@ -97,5 +97,34 @@ class TestCleanBuild(unittest.TestCase):
 		test.clean_build([])
 		self.assertFalse(os.path.exists('build-tmp'))
 
+def make_sample_project():
+	#TODO
+	pass
+
+#
+#	Test Running Tests
+#
+class TestRunVuln(unittest.TestCase):
+	#TODO
+	def setUp(self):
+		pass
+	
+	def test(self):
+		pass
+	
+	def tearDown(self):
+		pass
+
+class TestRunInvuln(unittest.TestCase):
+	#TODO
+	def setUp(self):
+		pass
+	
+	def test(self):
+		pass
+	
+	def tearDown(self):
+		pass
+
 if __name__ == '__main__':
 	unittest.main()

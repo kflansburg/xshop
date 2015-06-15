@@ -100,16 +100,15 @@ def run_test(library, version, install_type):
 	prepare_build(containers,d)
 
 	# Check for base test image	
-		# TODO - Write docker.build_base_test_image() and 
-		# add that dockerfile to defaults 
+	dockerw.build_image('base_test_image')
 
 	# Run Docker Compose
-		# TODO - Add docker compose wrapper with error 
-		# checking. 
+	dockerw.compose_up()
 
 	# Call hook
-		# TODO - Add docker hook wrapper with error and
-		# and result checking
+	for c in containers:
+		c = "xshop_"+c+"_1"
+		print(dockerw.run_hook(c,'run_exploit'))
 		# TODO - Change hook to check environment variable
 
 	# Clean up
