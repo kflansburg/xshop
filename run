@@ -1,0 +1,3 @@
+#! /usr/bin/python2.7
+from xshop import new
+new.new_test_project('foobar')
