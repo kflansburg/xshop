@@ -15,14 +15,14 @@ templateLoader = jinja2.FileSystemLoader( searchpath="." )
 templateEnv = jinja2.Environment( loader=templateLoader )
 import os
 import shutil
+import re
 
 #
 #	Replaces substitutions within a file. Destructive
 #
 def template_file(path,d):
 	template = templateEnv.get_template( path )
-	templateVars = d
-	output = template.render( templateVars )
+	output = template.render( d )
 	os.remove(path)
 	f = open(path,'w')
 	f.write(output)
@@ -35,7 +35,8 @@ def template_file(path,d):
 def template_folder(path,d):
 	if os.path.isfile(path):
 		# File
-		template_file(path,d)
+		if not re.compile('[\s\S]+(.deb$|.tar.gz$)').match(path):
+			template_file(path,d)
 	else:
 		files = os.listdir(path)
 		for f in files:
