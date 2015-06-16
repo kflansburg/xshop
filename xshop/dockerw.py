@@ -128,12 +128,12 @@ def run_hook(container,hook):
 #	function builds the specified image. 
 #
 def build_image(image_name):
-	xshop_path = os.path.dirname(os.path.realpath(__file__))
+	xshop_path =os.path.abspath(os.path.dirname(__file__))
 	context_path = xshop_path+"/defaults/contexts/"+image_name
 
 	# Check that a build context exists
 	if not os.path.isdir(context_path):
-		raise IOError('Image context not found')
+		raise IOError('Image context not found:' + context_path)
 	if not os.path.isfile(context_path+"/Dockerfile"):
 		raise IOError('Dockerfile not found in context')
 
