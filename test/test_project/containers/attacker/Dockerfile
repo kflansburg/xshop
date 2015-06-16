@@ -9,4 +9,4 @@ WORKDIR /home/
 #
 ADD test /home/
 
-CMD while true; do sleep 1; done
+CMD while true; do sleep .01; done

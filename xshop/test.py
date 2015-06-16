@@ -19,6 +19,7 @@
 #
 
 import logging
+from xshop import exceptions
 from xshop import template
 from xshop import dockerw
 import shutil

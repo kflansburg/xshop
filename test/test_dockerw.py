@@ -131,8 +131,6 @@ class TestComposeUpGood(unittest.TestCase):
 		self.assertTrue(dockerw.container_running('xshop_target_1'))
 		self.assertTrue(dockerw.container_running('xshop_attacker_1'))
 		dockerw.compose_down()
-		self.assertFalse(dockerw.container_running('xshop_target_1'))
-		self.assertFalse(dockerw.container_running('xshop_attacker_1'))
 
 	def tearDown(self):
 		os.chdir('..')
@@ -170,8 +168,6 @@ class TestComposeUpBad(unittest.TestCase):
 	def test(self):
 		with self.assertRaises(exceptions.DockerError):
 			dockerw.compose_up()
-		self.assertFalse(dockerw.container_running('xshop_target_1'))
-		self.assertFalse(dockerw.container_running('xshop_attacker_1'))
 
 	def tearDown(self):
 		os.chdir('..')

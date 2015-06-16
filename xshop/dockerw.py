@@ -100,6 +100,7 @@ def compose_down():
 	for c in containers:
 		if container_exists(c):
 			process = sh(['docker','kill',c],stdout=subprocess.PIPE)	
+			process.wait()
 			stdout,stderr = process.communicate()
 			logging.info(stdout)
 			if process.returncode:

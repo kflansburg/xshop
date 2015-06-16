@@ -115,18 +115,15 @@ class TestRunVuln(unittest.TestCase):
 
 class TestRunInvuln(unittest.TestCase):
 	def setUp(self):
-		pass
-#		make_sample_project()
-#		os.chdir('test_project')
+		make_sample_project()
+		os.chdir('test_project')
 
 	def test(self):
-		pass
-#		self.assertFalse(test.run_test('hello','2.9-2','amd64','debian'))
+		self.assertFalse(test.run_test('hello','2.9-2+deb8u1','amd64','debian'))
 	
 	def tearDown(self):
-		pass
-#		os.chdir('..')
-#		shutil.rmtree('test_project')
+		os.chdir('..')
+		shutil.rmtree('test_project')
 
 if __name__ == '__main__':
 	unittest.main()
