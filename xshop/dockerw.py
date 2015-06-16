@@ -19,9 +19,22 @@ import os
 from docker import Client
 import json
 from xshop import exceptions
-from xshop import test
 import subprocess
 from subprocess import Popen as sh
+
+#
+#	Helper function to parse docker compose yaml
+#
+def parse_docker_compose():
+        regex = re.compile("^([\S]+):\n")
+
+        containers = []
+        f = open('docker-compose.yml')
+        for line in f.readlines():
+                m = regex.match(line)
+                if m:
+                        containers.append(m.group(1))
+        return containers
 
 #
 #	Checks whether a container name exists, running
@@ -78,7 +91,7 @@ def compose_up():
 #
 def compose_down():
 	# Get list of project containers
-	containers = test.parse_docker_compose()
+	containers = parse_docker_compose()
 	
 	# Kill each one. Docker-compose kill can be ineffective
 	containers = map(lambda c: "xshop_"+c+"_1", containers)
