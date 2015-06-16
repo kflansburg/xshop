@@ -9,4 +9,4 @@ WORKDIR /home/
 #
 ADD test /home/
 
-CMD /sbin/init
+CMD while true; do sleep 1; done
