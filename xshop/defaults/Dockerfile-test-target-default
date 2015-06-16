@@ -8,7 +8,7 @@ ENV {{ container_name }} CONTAINER_NAME
 
 WORKDIR /home/
 
-{% if install_type=='source' %}
+{% if install_type=="source" %}
     RUN apt-get -y build-dep {{ library }}
 
     ADD {{ library }}-{{ version }}.tar.gz /home/
@@ -18,10 +18,10 @@ WORKDIR /home/
     RUN make
     RUN make install
 
-{% elif install_type='debian %}
+{% elif install_type=="debian" %}
     ADD {{ library }}-{{ version }} /home/
 
-    RUN dpkg -i {{ library }}_{{ version }}-1_{{ arch }}.deb
+    RUN dpkg -i {{ library }}_{{ version }}_{{ arch }}.deb
     RUN apt-get -y install -f
 
 {% else %}
@@ -43,4 +43,4 @@ ADD test /home/
 #   Add long running command to start service, a dummy
 #   loop is provided for testing libraries
 #
-CMD python2 -c "import test;test.daemon()"
+CMD while true; do sleep 1; done
