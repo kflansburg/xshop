@@ -18,7 +18,9 @@
 #		Return results of test and clean up
 #
 
+import logging
 from xshop import template
+from xshop import dockerw
 import shutil
 import os
 import re
@@ -80,36 +82,41 @@ def prepare_build(containers,d):
 #
 def clean_build(containers):
 	# Remove temporary compose folder
-	os.chdir('..')
 	shutil.rmtree('build-tmp')
 
 #
 #	This function is intended to be the main script for i
 #	running a test.
 #
-def run_test(library, version, install_type):
-	# Get containers
-	containers = parse_docker_compose()
+def run_test(library, version, arch,install_type):
+	logging.basicConfig(filename='test.log',level=logging.DEBUG)	
+	cwd = os.getcwd()
+	try:
+		# Get containers
+		containers = parse_docker_compose()
+		
+		# Generate template dictionary	
+		d = {'library':library,
+			'version':version,
+			'install_type':install_type,
+			'arch':arch}
 
-	# Generate template dictionary	
-	d = {'library':library,
-		'version':version,
-		'install_type':install_type}
+		# Prepare Build
+		prepare_build(containers,d)
 
-	# Prepare Build
-	prepare_build(containers,d)
+		# Check for base test image	
+		dockerw.build_image('base_test_image')
 
-	# Check for base test image	
-	dockerw.build_image('base_test_image')
+		# Run Docker Compose
+		dockerw.compose_up()
 
-	# Run Docker Compose
-	dockerw.compose_up()
+		# Call hook
+		for c in containers:
+			c = "xshop_"+c+"_1"
+			print(dockerw.run_hook(c,'run_exploit'))
+			# TODO - Change hook to check environment variable
 
-	# Call hook
-	for c in containers:
-		c = "xshop_"+c+"_1"
-		print(dockerw.run_hook(c,'run_exploit'))
-		# TODO - Change hook to check environment variable
-
-	# Clean up
-	clean_build(containers)
+	finally:
+		os.chdir(cwd)
+		# Clean up
+		clean_build(containers)
