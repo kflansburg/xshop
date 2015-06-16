@@ -1,2 +1,2 @@
-def run_xploit():
+def run_exploit():
 	return 0
