@@ -20,6 +20,8 @@ from docker import Client
 import json
 from xshop import exceptions
 import subprocess
+import re
+import sys
 from subprocess import Popen as sh
 
 #

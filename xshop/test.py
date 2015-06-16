@@ -111,12 +111,16 @@ def run_test(library, version, arch,install_type):
 		dockerw.compose_up()
 
 		# Call hook
+		vuln=False
 		for c in containers:
 			c = "xshop_"+c+"_1"
-			print(dockerw.run_hook(c,'run_exploit'))
+			if dockerw.run_hook(c,'run_exploit'):
+				vuln=True
 			# TODO - Change hook to check environment variable
 
 	finally:
 		os.chdir(cwd)
 		# Clean up
 		clean_build(containers)
+	
+	return vuln

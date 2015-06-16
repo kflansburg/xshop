@@ -91,7 +91,6 @@ class TestPrepare_Build(unittest.TestCase):
 class TestCleanBuild(unittest.TestCase):
 	def setUp(self):
 		os.mkdir('build-tmp')
-		os.chdir('build-tmp')
 	
 	def test(self):
 		test.clean_build([])
