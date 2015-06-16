@@ -89,18 +89,21 @@ def clean_build(containers):
 #	This function is intended to be the main script for i
 #	running a test.
 #
-def run_test(library, version, arch,install_type):
+def run_test(version,install_type):
+	
 	logging.basicConfig(filename='test.log',level=logging.DEBUG)	
 	cwd = os.getcwd()
 	try:
+		library = 'hello'
+		#TODO write config file handler
+
 		# Get containers
 		containers = parse_docker_compose()
 		
 		# Generate template dictionary	
 		d = {'library':library,
 			'version':version,
-			'install_type':install_type,
-			'arch':arch}
+			'install_type':install_type}
 
 		# Prepare Build
 		prepare_build(containers,d)

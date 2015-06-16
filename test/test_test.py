@@ -2,6 +2,7 @@ import unittest
 import os
 import shutil
 from xshop import test
+from xshop import exceptions
 
 def make_sample_config():
 	os.mkdir('containers')
@@ -112,7 +113,7 @@ class TestRunVuln(unittest.TestCase):
 		f.close()
 	
 	def test(self):
-		self.assertTrue(test.run_test('hello','2.9-2+deb8u1','amd64','debian'))
+		self.assertTrue(test.run_test('2.9-2+deb8u1','debian'))
 	
 	def tearDown(self):
 		os.chdir('..')
@@ -124,7 +125,7 @@ class TestRunInvuln(unittest.TestCase):
 		os.chdir('test_project')
 
 	def test(self):
-		self.assertFalse(test.run_test('hello','2.9-2+deb8u1','amd64','debian'))
+		self.assertFalse(test.run_test('2.9-2+deb8u1','debian'))
 	
 	def tearDown(self):
 		os.chdir('..')

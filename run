@@ -1,3 +1,33 @@
 #! /usr/bin/python2.7
 from xshop import new
-new.new_test_project('foobar')
+from xshop import test
+import sys
+args = sys.argv
+
+#
+#	new [project_type] [library] [name]
+#
+if args[1]=='new':
+	if len(args)<4:
+		print ("Insufficient arguments.")
+	elif len(args)>4:
+		print ("Too many arguments.")
+	
+	if args[2]=='test':
+		new.new_test_project(args[3],library)
+	elif args[2]=='build':
+		new.new_build_project(args[3])
+	else:
+		print ("Project type not recognized: "+args[2])
+#
+#	test [source] [version]
+#
+elif args[1]=='test':
+	if len(args)<4:
+		print("Insufficient arguments.")
+	elif len(args)>4:
+		print("Too many arguments.")
+	test.run_test(args[3],args[2])
+else:
+	print ("Command not recognized: "+args[1])
+		

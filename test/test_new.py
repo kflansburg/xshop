@@ -9,7 +9,7 @@ class TestFileExists(unittest.TestCase):
 
 	def test(self):
 		with self.assertRaises(OSError):
-			new.new_test_project('new-test')
+			new.new_test_project('new-test','hello')
 		with self.assertRaises(OSError):
 			new.new_build_project('new-test')
 

@@ -38,7 +38,7 @@ import shutil
 #	copies any templates in. 
 #
 
-def new_test_project(name):
+def new_test_project(name,library):
 	if os.path.isdir(name) or os.path.isfile(name):
 		raise OSError('Folder %s already exists'%(name,))
 
@@ -57,6 +57,9 @@ def new_test_project(name):
 	shutil.copy2(xshop_path+"/defaults/Dockerfile-test-attacker-default",name+'/containers/attacker/Dockerfile')
 	shutil.copy2(xshop_path+"/defaults/Dockerfile-test-target-default",name+'/containers/target/Dockerfile')
 
+	f = open(name+'/.config','w')
+	f.write(library)
+	f.close()
 
 #
 #	Generates a new directory, `name` with the required
