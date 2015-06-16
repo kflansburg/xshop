@@ -98,8 +98,7 @@ class TestCleanBuild(unittest.TestCase):
 		self.assertFalse(os.path.exists('build-tmp'))
 
 def make_sample_project():
-	#TODO
-	pass
+	shutil.copytree('test/test_project/','test_project')
 
 #
 #	Test Running Tests
@@ -116,15 +115,19 @@ class TestRunVuln(unittest.TestCase):
 		pass
 
 class TestRunInvuln(unittest.TestCase):
-	#TODO
 	def setUp(self):
 		pass
-	
+#		make_sample_project()
+#		os.chdir('test_project')
+
 	def test(self):
 		pass
+#		self.assertFalse(test.run_test('hello','2.9-2','amd64','debian'))
 	
 	def tearDown(self):
 		pass
+#		os.chdir('..')
+#		shutil.rmtree('test_project')
 
 if __name__ == '__main__':
 	unittest.main()
