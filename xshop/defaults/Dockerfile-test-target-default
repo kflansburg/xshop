@@ -43,4 +43,4 @@ ADD test /home/
 #   Add long running command to start service, a dummy
 #   loop is provided for testing libraries
 #
-CMD while true; do sleep 1; done
+CMD while true; do sleep .1; done

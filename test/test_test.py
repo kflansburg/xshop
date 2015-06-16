@@ -103,15 +103,20 @@ def make_sample_project():
 #	Test Running Tests
 #
 class TestRunVuln(unittest.TestCase):
-	#TODO
 	def setUp(self):
-		pass
+		make_sample_project()
+		os.chdir('test_project')
+		os.remove('test/xshop_test.py')
+		f = open('test/xshop_test.py','w')
+		f.write("run_exploit():\n\treturn 1")
+		f.close()
 	
 	def test(self):
-		pass
+		self.assertTrue(test.run_test('hello','2.9-2+deb8u1','amd64','debian'))
 	
 	def tearDown(self):
-		pass
+		os.chdir('..')
+		shutil.rmtree('test_project')
 
 class TestRunInvuln(unittest.TestCase):
 	def setUp(self):
