@@ -118,6 +118,8 @@ def run_test(library, version, arch,install_type):
 				vuln=True
 			# TODO - Change hook to check environment variable
 
+	except exceptions.DockerError as e:
+		raise exceptions.DockerError(e)
 	finally:
 		os.chdir(cwd)
 		# Clean up
