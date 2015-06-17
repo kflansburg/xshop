@@ -1,6 +1,6 @@
 FROM xshop:base_test_image
 
-ENV {{ container_name }} CONTAINER_NAME
+ENV CONTAINER_NAME {{ container_name }}
 
 #
 # Installation
