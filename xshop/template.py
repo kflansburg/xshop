@@ -17,6 +17,8 @@ import os
 import shutil
 import re
 
+OMIT = '[\s\S]+(.deb$|.tar.gz$|.swp$|.changes$|.dsc$|.tar.xz$)'
+
 #
 #	Replaces substitutions within a file. Destructive
 #
@@ -35,7 +37,7 @@ def template_file(path,d):
 def template_folder(path,d):
 	if os.path.isfile(path):
 		# File
-		if not re.compile('[\s\S]+(.deb$|.tar.gz$|.swp$)').match(path):
+		if not re.compile(OMIT).match(path):
 			template_file(path,d)
 	else:
 		files = os.listdir(path)
