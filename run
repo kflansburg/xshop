@@ -27,7 +27,7 @@ elif args[1]=='test':
 		print("Insufficient arguments.")
 	elif len(args)>4:
 		print("Too many arguments.")
-	test.run_test(args[3],args[2])
+	print test.run_test(args[3],args[2])
 else:
 	print ("Command not recognized: "+args[1])
 		
