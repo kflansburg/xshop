@@ -22,6 +22,7 @@ import logging
 from xshop import exceptions
 from xshop import template
 from xshop import dockerw
+from xshop import config
 import shutil
 import os
 import re
@@ -90,12 +91,17 @@ def clean_build(containers):
 #	running a test.
 #
 def run_test(version,install_type):
-	
 	logging.basicConfig(filename='test.log',level=logging.DEBUG)	
+	
+	if not config.check():
+		raise Exception('No project configuration found')
+
+	library = config.Config().get('library')
+	
 	cwd = os.getcwd()
+	
 	try:
-		library = 'hello'
-		#TODO write config file handler
+		#TODO Check version available
 
 		# Get containers
 		containers = parse_docker_compose()
