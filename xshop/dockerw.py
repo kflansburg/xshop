@@ -19,6 +19,7 @@ import os
 from docker import Client
 import json
 from xshop import exceptions
+from xshop import colors
 import subprocess
 import re
 import sys
@@ -75,14 +76,14 @@ def image_exists(name):
 # 	Calls docker compose on a supplied compose file
 #
 def compose_up():
-	logging.info("Running docker-compose build")
+	logging.info(colors.colors.OKGREEN+"Running docker-compose build"+colors.colors.ENDC)
 	process = sh(['docker-compose','-p','xshop','build'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	stdout,stderr = process.communicate()
 	logging.info(stdout)
 	if process.returncode:
 		raise exceptions.DockerError(stderr)
 
-	logging.info("Running docker-compose start")
+	logging.info(colors.colors.OKGREEN+"Running docker-compose start"+colors.colors.ENDC)
 	process = sh(['docker-compose','-p','xshop','up','-d'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	stdout,stderr = process.communicate()
 	logging.info(stdout)

@@ -19,6 +19,7 @@
 #
 
 import logging
+from xshop import colors
 from xshop import exceptions
 from xshop import template
 from xshop import dockerw
@@ -112,29 +113,34 @@ def run_test(version,install_type):
 			'install_type':install_type}
 
 		# Prepare Build
+		logging.info(colors.colors.OKGREEN+"Preparing Build Context."+colors.colors.ENDC)
 		prepare_build(containers,d)
 
 		# Check for base test image	
+		logging.info(colors.colors.OKGREEN+"Rebuilding Base Test Image."+colors.colors.ENDC)
 		dockerw.build_image('base_test_image')
 
 		# Run Docker Compose
 		dockerw.compose_up()
 
 		# Call hook
-		logging.info("Running Hooks")
+		logging.info(colors.colors.OKGREEN+"Running Hooks:"+colors.colors.ENDC)
 		vuln=False
 		for c in containers:
+			logging.info(colors.colors.OKGREEN+"\t"+c+colors.colors.ENDC)
 			c = "xshop_"+c+"_1"
 			if dockerw.run_hook(c,'run_exploit'):
 				vuln=True
 			# TODO - Change hook to check environment variable
+		
+		logging.info(colors.colors.OKGREEN+"Result: "+str(vuln)+colors.colors.ENDC)
 	except exceptions.DockerError as e:
 		raise exceptions.DockerError(e)
 	finally:
 		os.chdir(cwd)
 		# Clean up
-		logging.info("Cleaning Up")
+		logging.info(colors.colors.OKGREEN+"Cleaning Up."+colors.colors.ENDC)
 		clean_build(containers)
-		logging.info("Done.")
+		logging.info(colors.colors.OKGREEN+"Done."+colors.colors.ENDC)
 			
 	return vuln
