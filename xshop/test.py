@@ -134,10 +134,12 @@ def run_test(version,install_type):
 			# TODO - Change hook to check environment variable
 		
 		logging.info(colors.colors.OKGREEN+"Result: "+str(vuln)+colors.colors.ENDC)
+
 	except exceptions.DockerError as e:
 		raise exceptions.DockerError(e)
 	finally:
 		os.chdir(cwd)
+		dockerw.compose_down()
 		# Clean up
 		logging.info(colors.colors.OKGREEN+"Cleaning Up."+colors.colors.ENDC)
 		clean_build(containers)

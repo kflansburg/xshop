@@ -108,6 +108,13 @@ def compose_down():
 			logging.info(stdout)
 			if process.returncode:
 				raise exceptions.DockerError(stderr)
+			process = sh(['docker','kill',c],stdout=subprocess.PIPE)
+			process.wait()
+			stdout,stderr = process.communicate()
+			logging.info(stdout)
+			if process.returncode:
+				raise exceptions.DockerError(stderr)
+
 
 #
 #	Runs a given hook in a running container and return
