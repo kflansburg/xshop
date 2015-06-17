@@ -75,12 +75,14 @@ def image_exists(name):
 # 	Calls docker compose on a supplied compose file
 #
 def compose_up():
+	logging.info("Running docker-compose build")
 	process = sh(['docker-compose','-p','xshop','build'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	stdout,stderr = process.communicate()
 	logging.info(stdout)
 	if process.returncode:
 		raise exceptions.DockerError(stderr)
 
+	logging.info("Running docker-compose start")
 	process = sh(['docker-compose','-p','xshop','up','-d'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	stdout,stderr = process.communicate()
 	logging.info(stdout)

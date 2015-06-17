@@ -121,18 +121,20 @@ def run_test(version,install_type):
 		dockerw.compose_up()
 
 		# Call hook
+		logging.info("Running Hooks")
 		vuln=False
 		for c in containers:
 			c = "xshop_"+c+"_1"
 			if dockerw.run_hook(c,'run_exploit'):
 				vuln=True
 			# TODO - Change hook to check environment variable
-
 	except exceptions.DockerError as e:
 		raise exceptions.DockerError(e)
 	finally:
 		os.chdir(cwd)
 		# Clean up
+		logging.info("Cleaning Up")
 		clean_build(containers)
-	
+		logging.info("Done.")
+			
 	return vuln
