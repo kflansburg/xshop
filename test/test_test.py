@@ -103,6 +103,12 @@ def make_sample_project():
 #
 #	Test Running Tests
 #
+
+class TestRunNoProject(unittest.TestCase):
+	def test(self):
+		with self.assertRaises(Exception):
+			test.run_test('foo','bar')
+
 class TestRunVuln(unittest.TestCase):
 	def setUp(self):
 		make_sample_project()
