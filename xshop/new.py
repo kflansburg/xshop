@@ -31,6 +31,7 @@
 
 import os
 import shutil
+from xshop import config
 
 #
 #	Generates a new directory, `name` with the required
@@ -57,9 +58,10 @@ def new_test_project(name,library):
 	shutil.copy2(xshop_path+"/defaults/Dockerfile-test-attacker-default",name+'/containers/attacker/Dockerfile')
 	shutil.copy2(xshop_path+"/defaults/Dockerfile-test-target-default",name+'/containers/target/Dockerfile')
 
-	f = open(name+'/.config','w')
-	f.write(library)
-	f.close()
+	os.chdir(name)
+	c = config.Config()
+	c.put('library',library)	
+	os.chdir('..')
 
 #
 #	Generates a new directory, `name` with the required
