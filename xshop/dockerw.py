@@ -76,6 +76,8 @@ def image_exists(name):
 # 	Calls docker compose on a supplied compose file
 #
 def compose_up():
+	#TODO multicore compiling?
+	#TODO output compile progress?
 	logging.info(colors.colors.OKGREEN+"Running docker-compose build"+colors.colors.ENDC)
 	process = sh(['docker-compose','-p','xshop','build'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	stdout,stderr = process.communicate()
