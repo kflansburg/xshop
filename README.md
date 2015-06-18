@@ -91,14 +91,14 @@ xshop new test Heartbleed openssl
 ```
 The general format is `xshop new [project type] [project name] [target library]`. The project name doesn't matter and is for personal organization. The target library should be what is used to name the source tarballs. 
 
-This creates the default test folder structure mentioned above. The containers folder holds the Docker build context for each perticipant container in the test environemnt. The docker-compose.yml describes these containers and any linking between them. The test directory contains a file of hook functions which allow you to describe how your code should be executed to perform the test, and in which container. The whole test directory is copied into every container during testing and the hooks run. 
+This creates the default test folder structure mentioned above. The containers folder holds the Docker build context for each participant container in the test environement. The docker-compose.yml describes these containers and any linking between them. The test directory contains a file of hook functions, `xshop_test.py`, which allow you to describe how your code should be executed to perform the test, and in which container. The whole test directory is copied into every container during testing and the hooks run. 
 
 For this example, the docker-compose.yml file is fine because we want to have a the target running a rudimentary OpenSSL server, and the attacker connecting to it to perform the exploit. In the test folder, I place a python script whose main() function performs the attack and returns 1 for success and 0 for failure. In xshop\_test.py: 
 ```
 import os
 import heartbleed
 
-def run\_exploit():
+def run_exploit():
 	if os.environ['CONTAINER_NAME']=='attacker':
 		return heartbleed.main()
 	return 0
@@ -110,13 +110,13 @@ The attacker container should be configured properly, but we need to set up the 
 #### Repository
 If the library and version to be tested is in a repository that is tracked by the container, it is easy to simply provide the information to APT and install this way. One of the goals of this project is to provide a repository of legacy versions prebuilt for debian:stable, #TODO link to list of libraries. 
 
-Additionally if you wish to provide your on repo, say one produced by an xshop build project, you should modify the target Dockerfile to import your signing key and add the repository to the sources list. #TODO more here. 
+Additionally if you wish to provide your own repo, say one produced by an xshop build project, you should modify the target Dockerfile to import your signing public key and add the repository to the sources list. #TODO more here. 
 
 #### Debian
 If you have a Debian package, you can simply create a folder `library-version` in the target build context and place the package inside.
 
 #### Source
-If you have a source tarball, place it in the target build context. You will most likely have to modify the target Dockerfile to get this to compile, in the case of OpenSSL we must run `.config prefix=/usr` instead of `.Configure` and `make install_sw` intead of `make install`. Note that the Dockerfile shows the usage of the template system to select which commands to pass to Docker. Other variables available to you are `library` and `version`. You can use these variables to splice into commands (for instance the apt-get install used for repository install), or you can use them for additional if statement based control. An example of this would be modifying the commands for compilation for very old versions. 
+If you have a source tarball, place it in the target build context. You will most likely have to modify the target Dockerfile to get this to compile, in the case of OpenSSL we must run `./config prefix=/usr` instead of `./Configure` and `make install_sw` intead of `make install`. Note that the Dockerfile shows the usage of the template system to select which commands to pass to Docker. Other variables available to you are `library` and `version`. You can use these variables to splice into commands (for instance the apt-get install used for repository install), or you can use them for additional if statement based control. An example of this would be modifying the commands for compilation for very old versions. 
 
 #### Running
 Next, to run a test. Here is my folder layout:
@@ -146,7 +146,7 @@ Next, to run a test. Here is my folder layout:
 │   └── xshop_test.py
 ```
 
-Note that I have debian packages for versions `1.0.1a` and `1.0.1g`, as well as source for `1.0.1f` and `1.0.1g`. In the repo, I have `1.0.1a` and `1.0.1g`. For Heartbleed, `1.0.1f` was the last vulnerable version. 
+Note that I have Debian packages for versions `1.0.1a` and `1.0.1g`, as well as source for `1.0.1f` and `1.0.1g`. In the repo, I have `1.0.1a` and `1.0.1g`. For Heartbleed, `1.0.1f` was the last vulnerable version. 
 
 Tests should be run from the root of the project directory. To run the test and install from the repository: 
 
@@ -157,7 +157,7 @@ kevin@localhost:~/projects/Heartbleed$ xshop test remote 1.0.1g
 False
 ```
 
-Great! The tests confirm other's results with Heartbleed. You might notice that there is very output. All output is routed to test.log in the root of the project folder, which can be monitored with `tail -f`. This is most useful for compilation tests which take some time. Any output from your exploit script will also go here. In my case, for `1.0.1a`, I find the memory dumped from vulnerable servers:
+Great! The tests confirm other's results with Heartbleed. You might notice that there is very little output. All output, including Docker build output, compilation output, and hook script output is routed to `test.log` in the root of the project folder, which can be monitored with `tail -f`. This is most useful for compilation tests which take some time. In my case, for `1.0.1a`, I find that my script printed out the memory dumped from the vulnerable `1.0.1a` server:
 
 ```
 .@....SC[...r....+..H...9...
