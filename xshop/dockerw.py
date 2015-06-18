@@ -80,6 +80,9 @@ def compose_up():
 	#TODO output compile progress?
 	logging.info(colors.colors.OKGREEN+"Running docker-compose build"+colors.colors.ENDC)
 	process = sh(['docker-compose','-p','xshop','build'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	while process.poll() is None:
+		logging.info(process.stdout.readline())
+
 	stdout,stderr = process.communicate()
 	logging.info(stdout)
 	if process.returncode:

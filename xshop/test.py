@@ -135,8 +135,6 @@ def run_test(version,install_type):
 		
 		logging.info(colors.colors.OKGREEN+"Result: "+str(vuln)+colors.colors.ENDC)
 
-	except exceptions.DockerError as e:
-		raise exceptions.DockerError(e)
 	finally:
 		os.chdir(cwd)
 		dockerw.compose_down()
