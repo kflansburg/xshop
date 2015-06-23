@@ -87,9 +87,9 @@ To run tests, from the root project directory:
 #### Creating a Project
 Start a new project ( as an example we will use the Heartbleed bug ):
 ```
-xshop new test Heartbleed openssl
+xshop new test openssl Heartbleed
 ```
-The general format is `xshop new [project type] [project name] [target library]`. The project name doesn't matter and is for personal organization. The target library should be what is used to name the source tarballs. 
+The general format is `xshop new [project type] [target library] [project name]`. The project name doesn't matter and is for personal organization. The target library should be what is used to name the source tarballs. 
 
 This creates the default test folder structure mentioned above. The containers folder holds the Docker build context for each participant container in the test environement. The docker-compose.yml describes these containers and any linking between them. The test directory contains a file of hook functions, `xshop_test.py`, which allow you to describe how your code should be executed to perform the test, and in which container. The whole test directory is copied into every container during testing and the hooks run. 
 

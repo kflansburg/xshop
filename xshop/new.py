@@ -43,7 +43,7 @@ from xshop import config
 #	copies any templates in. 
 #
 
-def new_test_project(name,library):
+def new_test_project(library, name):
 	if os.path.isdir(name) or os.path.isfile(name):
 		raise OSError('Folder %s already exists'%(name,))
 
