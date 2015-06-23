@@ -8,7 +8,7 @@ Homepage: {{ homepage }}
 
 Package: {{ library %}
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}{% for pack in desp %}, {{ pack }}{% endfor %}
+Depends: ${shlibs:Depends}, ${misc:Depends}{% for pack in deps %}, {{ pack }}{% endfor %}
 Description: Legacy {{ library }}
  Legacy version of {{ library }} used for 
  security research. Do not use in production. 
