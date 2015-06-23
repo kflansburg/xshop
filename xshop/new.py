@@ -25,7 +25,11 @@
 #		|-source
 #		|-packages
 #		|-config
+#		|	|-config.yaml
 #		|	|-debian
+#		|	|	|-changelog
+#		|	|	|-rules
+#		|	|	|-control
 #		|	|-.pbuilderrc
 #
 
@@ -76,3 +80,11 @@ def new_build_project(name):
 	os.mkdir(name+"/source")
 	os.mkdir(name+"/packages")
 	os.mkdir(name+"/config")
+	os.mkdir(name+"/config/debian")
+
+	xshop_path = os.path.dirname(os.path.realpath(__file__))
+	
+	shutil.copy2(xshop_path+"/defaults/debian/changelog", name+"/config/debian/changelog")
+	shutil.copy2(xshop_path+"/defaults/debian/control", name+"/config/debian/control")
+	shutil.copy2(xshop_path+"/defaults/debian/rules", name+"/config/debian/rules")
+
