@@ -7,14 +7,14 @@
 #
 
 import os
-import json
+import yaml
 
 #
 #	Checks if there is a .config file in the working 
 #	diractory (implying that this is a project folder)
 #
 def check():
-	if os.path.isfile(".config"):
+	if os.path.isfile("config.yaml"):
 		return True
 	else:
 		return False
@@ -29,7 +29,7 @@ class Config:
 	#	not creates a new one.
 	#
 	def __init__(self):
-		self.path='.config'
+		self.path='config.yaml'
 		if os.path.isfile(self.path):
 			self.load_config()
 		else:
@@ -47,7 +47,7 @@ class Config:
 	# 
 	def persist(self):
 		f = open(self.path,'w')
-		f.write(json.dumps(self.config))
+		f.write(yaml.dump(self.config))
 		f.close()	
 
 	#
@@ -55,7 +55,7 @@ class Config:
 	#
 	def load_config(self):
 		f = open(self.path, 'r')
-		self.config = json.loads(f.read())
+		self.config = yaml.load(f.read())
 		f.close()
 		
 	#
