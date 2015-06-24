@@ -10,6 +10,7 @@
 #		The structure for Test Project:
 #
 #		PROJECT_NAME
+#		|- config.yaml
 #		|- docker-compose.yml
 #		|- containers
 #		|	|- target
@@ -22,10 +23,10 @@
 #		The structure for a Build Project:
 #
 #		PROJECT_NAME
+#		|-config.yaml
 #		|-source
 #		|-packages
 #		|-config
-#		|	|-config.yaml
 #		|	|-debian
 #		|	|	|-changelog
 #		|	|	|-rules
@@ -72,7 +73,7 @@ def new_test_project(library, name):
 #	structure for a build project as described above and 
 #	copies any templates in. 
 #
-def new_build_project(name):
+def new_build_project(library, name):
 	if os.path.isdir(name) or os.path.isfile(name):
 		raise OSError('Folder %s already exists'%(name,))
 
@@ -88,3 +89,13 @@ def new_build_project(name):
 	shutil.copy2(xshop_path+"/defaults/debian/control", name+"/config/debian/control")
 	shutil.copy2(xshop_path+"/defaults/debian/rules", name+"/config/debian/rules")
 
+	os.chdir(name)
+	c = config.Config()
+	c.put('library', library)
+	c.put('upstream-url',None)
+	c.put('dependencies',[])
+	c.put('build-dependencies',[])
+	c.put('name', None)
+	c.put('email', None)
+	c.put('source-versions', [])
+	os.chdir('..')

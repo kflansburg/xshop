@@ -16,7 +16,7 @@ if args[1]=='new':
 	if args[2]=='test':
 		new.new_test_project(args[3],args[4])
 	elif args[2]=='build':
-		new.new_build_project(args[3])
+		new.new_build_project(args[3],args[4])
 	else:
 		print ("Project type not recognized: "+args[2])
 #
