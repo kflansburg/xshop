@@ -1,4 +1,4 @@
-{{ library }} ({{ version }}-1) {{ release }}; urgency=low
+{{ library }} ({{ version }}-1) stable; urgency=low
 
   * Initial release
 
