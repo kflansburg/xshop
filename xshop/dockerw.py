@@ -25,6 +25,9 @@ import re
 import sys
 from subprocess import Popen as sh
 
+# 	
+#	Runs a docker command and handles any errors
+#
 def run_docker_command(command):
 	process = sh(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         while process.poll() is None:
@@ -65,6 +68,21 @@ def container_exists(name,all=True):
 	return False
 
 #
+#	Kills and removes a container if it exists
+#
+def remove_container(c):
+	if container_exists(c):
+		run_docker_command(['docker','kill',c])
+		run_docker_command(['docker','rm',c])
+
+#
+#	Removes image if it exists
+#
+def remove_image(c):
+	if image_exists(c):
+		run_docker_command(['docker','rmi',c])
+
+#
 #	Wrapper for easily checking if container is running
 #
 def container_running(name):
@@ -102,9 +120,7 @@ def compose_down():
 	# Kill each one. Docker-compose kill can be ineffective
 	containers = map(lambda c: "xshop_"+c+"_1", containers)
 	for c in containers:
-		if container_exists(c):
-			run_docker_command(['docker','kill',c])
-			run_docker_command(['docker','rm',c])	
+		remove_container(c)
 
 #
 #	Runs a given hook in a running container and return
@@ -126,6 +142,7 @@ def run_hook(container,hook):
 	return c.exec_inspect(job)['ExitCode']
 	
 def run_privileged(input_image, output_image, command):
+	remove_container('xshop_privileged_run')	
 	run_docker_command(['docker','run','--privileged=true','--name=xshop_privileged_run',input_image]+command)
 	run_docker_command(['docker','commit','xshop_privileged_run', output_image])
 
