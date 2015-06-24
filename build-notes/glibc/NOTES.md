@@ -9,7 +9,7 @@
 * autoconf
 * gawk
 
-### Procedure
+### Build Procedure
 
 Must compile in a new build directory. Compile to /usr/local/glibc. Supports parallel build.
 
@@ -19,7 +19,7 @@ make -j16
 make install
 ```
 
-### Running Test:
+### Running Tests
 
 Run a binary using library:
 
@@ -34,7 +34,7 @@ Run a binary using library:
 * Correct configure to recognize Make 4.
 
 ```
-sed -r -i 's/(3..89..)/\1 | 4.*/' {{ library }}-{{ version }}/configure
+sed -r -i 's/(3..89..)/\1 | 4.*/' glibc/configure
 ```
 
 ### 2.17
