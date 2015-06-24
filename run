@@ -1,6 +1,7 @@
 #! /usr/bin/python2.7
 from xshop import new
 from xshop import test
+from xshop import build
 import sys
 args = sys.argv
 
@@ -28,6 +29,8 @@ elif args[1]=='test':
 	elif len(args)>4:
 		print("Too many arguments.")
 	print test.run_test(args[3],args[2])
+elif args[1]=='build':
+	build.build(args[2])
 else:
 	print ("Command not recognized: "+args[1])
 		

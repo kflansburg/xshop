@@ -25,6 +25,17 @@ import re
 import sys
 from subprocess import Popen as sh
 
+def run_docker_command(command):
+	process = sh(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        while process.poll() is None:
+                logging.info(process.stdout.readline())
+
+        stdout,stderr = process.communicate()
+        logging.info(stdout)
+        if process.returncode:
+                raise exceptions.DockerError(stderr)
+
+
 #
 #	Helper function to parse docker compose yaml
 #
@@ -76,25 +87,10 @@ def image_exists(name):
 # 	Calls docker compose on a supplied compose file
 #
 def compose_up():
-	#TODO multicore compiling?
-	#TODO output compile progress?
 	logging.info(colors.colors.OKGREEN+"Running docker-compose build"+colors.colors.ENDC)
-	process = sh(['docker-compose','-p','xshop','build'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	while process.poll() is None:
-		logging.info(process.stdout.readline())
-
-	stdout,stderr = process.communicate()
-	logging.info(stdout)
-	if process.returncode:
-		raise exceptions.DockerError(stderr)
-
+	run_docker_command(['docker-compose','-p','xshop','build'])
 	logging.info(colors.colors.OKGREEN+"Running docker-compose start"+colors.colors.ENDC)
-	process = sh(['docker-compose','-p','xshop','up','-d'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	stdout,stderr = process.communicate()
-	logging.info(stdout)
-	if process.returncode:
-		compose_down()
-		raise exceptions.DockerError(stderr)
+	run_docker_command(['docker-compose','-p','xshop','up','-d'])
 
 #
 #	Function to clean up a test environemnt
@@ -107,19 +103,8 @@ def compose_down():
 	containers = map(lambda c: "xshop_"+c+"_1", containers)
 	for c in containers:
 		if container_exists(c):
-			process = sh(['docker','kill',c],stdout=subprocess.PIPE)	
-			process.wait()
-			stdout,stderr = process.communicate()
-			logging.info(stdout)
-			if process.returncode:
-				raise exceptions.DockerError(stderr)
-			process = sh(['docker','kill',c],stdout=subprocess.PIPE)
-			process.wait()
-			stdout,stderr = process.communicate()
-			logging.info(stdout)
-			if process.returncode:
-				raise exceptions.DockerError(stderr)
-
+			run_docker_command(['docker','kill',c])
+			run_docker_command(['docker','rm',c])	
 
 #
 #	Runs a given hook in a running container and return
@@ -140,6 +125,10 @@ def run_hook(container,hook):
 
 	return c.exec_inspect(job)['ExitCode']
 	
+def run_privileged(input_image, output_image, command):
+	run_docker_command(['docker','run','--privileged=true','--name=xshop_privileged_run',input_image]+command)
+	run_docker_command(['docker','commit','xshop_privileged_run', output_image])
+
 #
 #	Build contexts for some default images to be used are 
 # 	stored in xshop/defaults/contexts/<image_name>. This
