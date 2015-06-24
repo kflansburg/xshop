@@ -7,7 +7,7 @@ class TestFileExists(unittest.TestCase):
 	def setUp(self):
 		os.mkdir('config_test')
 		os.chdir('config_test')
-		f = open('.config','w')
+		f = open('config.yaml','w')
 		f.write("foobar")
 		f.close()
 
@@ -37,8 +37,8 @@ class TestConfigNoConfig(unittest.TestCase):
 
 	def test(self):
 		config.Config()
-		f = open('.config','r')
-		self.assertEqual(f.read(),'{}')
+		f = open('config.yaml','r')
+		self.assertEqual(f.read(),'{}\n')
 		f.close()
 
 	def tearDown(self):
@@ -49,14 +49,14 @@ class TestConfigConfig(unittest.TestCase):
 	def setUp(self):
 		os.mkdir('config_test')
 		os.chdir('config_test')
-		f=open('.config','w')
-		f.write('{"foo": "bar"}')
+		f=open('config.yaml','w')
+		f.write('foo: bar\n')
 		f.close()
 
 	def test(self):
 		config.Config()
-		f = open('.config','r')
-		self.assertEqual(f.read(),'{"foo": "bar"}')
+		f = open('config.yaml','r')
+		self.assertEqual(f.read(),'foo: bar\n')
 		f.close()
 
 	def tearDown(self):
@@ -67,8 +67,8 @@ class TestConfigGet(unittest.TestCase):
 	def setUp(self):
 		os.mkdir('config_test')
 		os.chdir('config_test')
-		f=open('.config','w')
-		f.write('{"foo": "bar"}')
+		f=open('config.yaml','w')
+		f.write('foo: bar\n')
 		f.close()
 
 	def test(self):
@@ -86,8 +86,8 @@ class TestConfigPut(unittest.TestCase):
 
 	def test(self):
 		config.Config().put('foo','bar')
-		f = open('.config','r')
-		self.assertEqual(f.read(),'{"foo": "bar"}')
+		f = open('config.yaml','r')
+		self.assertEqual(f.read(),'{foo: bar}\n')
 		f.close()
 
 	def tearDown(self):
