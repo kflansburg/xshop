@@ -35,6 +35,7 @@ def run_docker_command(command):
 
         stdout,stderr = process.communicate()
         logging.info(stdout)
+	logging.error(stderr)
         if process.returncode:
                 raise exceptions.DockerError(stderr)
 
