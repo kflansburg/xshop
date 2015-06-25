@@ -13,6 +13,7 @@ import logging
 from subprocess import Popen as sh
 import os
 import shutil
+from sets import Set
 from xshop import colors
 #
 #	Constructs a base cowbuilder image
@@ -112,7 +113,6 @@ def run_lintian(version):
 # 	/source and output resulting package to /packages
 #
 def build(version):
-	logging.basicConfig(filename='build.log',level=logging.DEBUG)
 
 	# Get project config
 	c = config.Config()
@@ -157,17 +157,58 @@ def build(version):
 			os.mkdir('packages/'+d['library']+'-'+d['version'])
 		shutil.move('build.log','packages/'+d['library']+'-'+d['version']+'/build.log')
 
+def finish_logging(log):
+	handlers = log.handlers[:]
+	for handler in handlers:
+    		handler.close()
+    		log.removeHandler(handler)
+
 def build_version(version):
+	logging.basicConfig(filename='build.log',level=logging.DEBUG)
+	log = logging.getLogger()
 	print colors.colors.BOLD+"Packaging "+version+": "+colors.colors.ENDC,
 	try:
 		build(version)
 		print colors.colors.BOLD+"Build - "+colors.colors.OKGREEN+"Success. "+colors.colors.ENDC,
 	except exceptions.BuildError as e:
 		print colors.colors.BOLD+"Build - "+colors.colors.FAIL+"Failed."+colors.colors.ENDC
-		return
+		finish_logging(log)
+		return False
 
 	try:
 		run_lintian(version)
 		print colors.colors.BOLD+"Lintian - "+colors.colors.OKGREEN+"Success."+colors.colors.ENDC
 	except exceptions.LintianError as e:
 		print colors.colors.BOLD+"Lintian - "+colors.colors.FAIL+"Failed."+colors.colors.ENDC
+		finish_logging(log)
+		return False
+	finish_logging(log)
+	return True
+
+
+def build_multiple(rebuild):
+	c = config.Config()
+	sversions = Set(c.get('source-versions'))
+	bversions = c.get('built-versions')
+	if rebuild:
+		versions = sversions
+		bversions = []
+		c.put('built-versions',bversions)
+	else:
+		versions = sversions - Set(bversions)
+
+	print "Found source for :\n"+str(list(sversions))
+	versions = list(versions)
+	print "Building versions:\n"+str(versions)
+
+	# Build each version and if it succeeds, add to build versions list. 
+	# Wrap in try to prevent errors from stopping the build. 
+	for v in versions:
+		try:
+			if build_version(v):
+				bversions.append(v)
+				c.put('built-versions',bversions)
+		except Exception as e:
+			print(e)
+
+				
