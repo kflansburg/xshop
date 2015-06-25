@@ -98,4 +98,5 @@ def new_build_project(library, name):
 	c.put('name', None)
 	c.put('email', None)
 	c.put('source-versions', [])
+	c.put('built-versions',[])
 	os.chdir('..')
