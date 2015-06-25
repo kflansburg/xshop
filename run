@@ -2,6 +2,8 @@
 from xshop import new
 from xshop import test
 from xshop import build
+from xshop import config
+from xshop import version
 import sys
 args = sys.argv
 
@@ -29,8 +31,25 @@ elif args[1]=='test':
 	elif len(args)>4:
 		print("Too many arguments.")
 	print test.run_test(args[3],args[2])
+#
+#	build			- Builds all versions which have not been successfully built 
+# 	build [version] 	- Builds version specified
+#	build -f		- Builds all versions
+#
 elif args[1]=='build':
-	build.build_version(args[2])
+	# Go ahead and detect versions
+	c = config.Config()
+	c.put('source-versions',version.detect_source(c.get('library'),'source'))
+	if len(args)==2:
+		build.build_multiple(False)
+	elif args[2]=='-f':
+		build.build_multiple(True)
+	else:	
+		if build.build_version(args[2]):
+			bversions = c.get('built-versions')
+			bversions.append(args[2])
+			c.put('built-versions',bversions)
+		
 else:
 	print ("Command not recognized: "+args[1])
 		
