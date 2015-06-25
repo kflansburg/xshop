@@ -8,7 +8,7 @@ ADD {{ library }}-{{ version }}.tar.gz /home/
 
 # Retar the file for dh-make
 WORKDIR /home/
-RUN tar -czf /home/{{ library }}-{{ version }}.tar.gz /home/{{ library }}-{{ version }}
+RUN tar -czf {{ library }}-{{ version }}.tar.gz {{ library }}-{{ version }}
 RUN rm -rf /home/{{ library }}-{{ version }}
 RUN tar -xf /home/{{ library }}-{{ version }}.tar.gz
 
