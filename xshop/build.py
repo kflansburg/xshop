@@ -15,15 +15,7 @@ import os
 import shutil
 from sets import Set
 from xshop import colors
-#
-#	Constructs a base cowbuilder image
-#
-def base_build_image():
-	dockerw.build_image('base_build_image')
 
-	# Cowbuilder must be installed in privileged container
-	dockerw.run_privileged('xshop:base_build_image','xshop:build_image',['cowbuilder','--create'])		
-	
 #
 #	Collects build config into dictionary for templating
 #
@@ -39,9 +31,9 @@ def build_template_dict(c,version):
 #
 #	Removes any directories that will be used for this build
 #
-def clean(path):
-        if os.path.isdir(path):
-                shutil.rmtree(path)
+def clean(output_path):
+        if os.path.isdir(output_path):
+                shutil.rmtree(output_path)
 
         if os.path.isdir('build-tmp'):
                 shutil.rmtree('build-tmp')
@@ -58,55 +50,34 @@ def check_source(library, version):
 #	Copies files used to build into context
 #
 def make_build_context(d):
-	source_path = 'source/'+d['library']+'-'+d['version']+'.tar.gz'
-	
+	# Copy and template build/ to build-tmp/
+	template.copy_and_template('build','build-tmp',d)
+
 	# Copy in Tarball
+	source_path = 'source/'+d['library']+'-'+d['version']+'.tar.gz'
         shutil.copy2(source_path,'build-tmp/')
         
-	# Copy in build Dockerfile
-	xshop_path =os.path.abspath(os.path.dirname(__file__))
-	template.copy_and_template(xshop_path+'/defaults/Dockerfile-build-default','build-tmp/Dockerfile',d)
-
-	# Copy in debian files
-	template.copy_and_template('config/debian','build-tmp/debian',d)
 
 #
-#	Copies out pbuilder result folder
+#	Copies out deb
 #
-def copy_build_result(output_path):
-	dockerw.run_docker_command(['docker','cp','xshop_privileged_run:/var/cache/pbuilder/result','packages/'])
-	shutil.move('packages/result',output_path)
+def copy_build_result(library,version):
+	output_path = 'packages/'+library+'-'+version+'/'
+	deb_path = 'xshop_lintian:/home/'+library+'-'+version+'/'+library+'_'+version+'-1_amd64.deb'
+	dockerw.run_docker_command(['docker','cp',deb_path,output_path])
 
-def run_lintian(version):
-	c = config.Config()
-	library = c.get('library')
-	ERROR=False
+def run_lintian(library,version):
 	try:
+		deb_path = '/home/'+library+'-'+version+'/'+library+'_'+version+'-1_amd64.deb'
 		dockerw.remove_container('xshop_lintian')
 		dockerw.run_docker_command(['docker',
                         'run',
                         '--name=xshop_lintian',
-                        'xshop:build-final',
+                        'xshop:build-tmp',
                         'lintian',
-                        '/var/cache/pbuilder/result/'+library+'_'+version+'-1.dsc'])
+                        deb_path])
 	except exceptions.DockerError as e:
-		logging.warning(e)
-		ERROR=True
-
-	try:
-		dockerw.remove_container('xshop_lintian')
-		dockerw.run_docker_command(['docker',
-                        'run',
-                        '--name=xshop_lintian',
-                        'xshop:build-final',
-                        'lintian',
-                        '/var/cache/pbuilder/result/'+library+'_'+version+'-1_amd64.deb'])
-	except exceptions.DockerError as e:
-		logging.warning(e)
-		ERROR=True
-
-	if ERROR:
-		raise exceptions.LintianError('')
+		raise exceptions.LintianError('')	
 
 #
 #	Function to perform build on a given version tarball in
@@ -126,13 +97,7 @@ def build(version):
 	# Clean old files
 	clean(output_path)
 
-	os.mkdir('build-tmp')
-
 	try:
-		# Build base image if neccesary
-		if not dockerw.image_exists('xshop:build_image'):	
-			base_build_image()
-
 		# Check that source exists
 		check_source(library,version)
 	
@@ -142,28 +107,21 @@ def build(version):
 		# Construct build image
 		dockerw.run_docker_command(['docker','build','-t','xshop:build-tmp','build-tmp/'])
 
-		# Run pbuilder
-		try:
-			dockerw.run_privileged('xshop:build-tmp','xshop:build-final',[])
-		except exceptions.DockerError as e:
-			raise exceptions.BuildError(e)
-		
-		# Copy out results
-		copy_build_result(output_path)
-
 	finally:
 		shutil.rmtree('build-tmp')
-		if not os.path.isdir('packages/'+d['library']+'-'+d['version']):
-			os.mkdir('packages/'+d['library']+'-'+d['version'])
-		shutil.move('build.log','packages/'+d['library']+'-'+d['version']+'/build.log')
 
-def finish_logging(log):
+def finish_logging(library,version,log):
 	handlers = log.handlers[:]
 	for handler in handlers:
     		handler.close()
     		log.removeHandler(handler)
+	if not os.path.isdir('packages/'+library+'-'+version):
+		os.mkdir('packages/'+library+'-'+version)
+	shutil.move('build.log','packages/'+library+'-'+version+'/build.log')
 
 def build_version(version):
+	c = config.Config()
+	library = c.get('library')
 	logging.basicConfig(filename='build.log',level=logging.DEBUG)
 	log = logging.getLogger()
 	print colors.colors.BOLD+"Packaging "+version+": "+colors.colors.ENDC,
@@ -172,17 +130,24 @@ def build_version(version):
 		print colors.colors.BOLD+"Build - "+colors.colors.OKGREEN+"Success. "+colors.colors.ENDC,
 	except exceptions.BuildError as e:
 		print colors.colors.BOLD+"Build - "+colors.colors.FAIL+"Failed."+colors.colors.ENDC
-		finish_logging(log)
+		finish_logging(library,version,log)
 		return False
 
 	try:
-		run_lintian(version)
-		print colors.colors.BOLD+"Lintian - "+colors.colors.OKGREEN+"Success."+colors.colors.ENDC
+		run_lintian(library,version)
+		print colors.colors.BOLD+"Lintian - "+colors.colors.OKGREEN+"Success."+colors.colors.ENDC,
 	except exceptions.LintianError as e:
-		print colors.colors.BOLD+"Lintian - "+colors.colors.FAIL+"Failed."+colors.colors.ENDC
-		finish_logging(log)
+		print colors.colors.BOLD+"Lintian - "+colors.colors.FAIL+"Failed."+colors.colors.ENDC,
+	
+	try:
+		copy_build_result(library, version)
+		print colors.colors.BOLD+"Copying Results - "+colors.colors.OKGREEN+"Success."+colors.colors.ENDC
+	except exceptions.DockerError as e:
+		print colors.colors.BOLD+"Copying Results - "+colors.colors.FAIL+"Failed."+colors.colors.ENDC
+		finish_logging(library,version,log)
 		return False
-	finish_logging(log)
+
+	finish_logging(library,version,log)
 	return True
 
 
