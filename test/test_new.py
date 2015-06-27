@@ -10,8 +10,6 @@ class TestFileExists(unittest.TestCase):
 	def test(self):
 		with self.assertRaises(OSError):
 			new.new_test_project('hello','new-test')
-		with self.assertRaises(OSError):
-			new.new_build_project('hello','new-test')
 
 	def tearDown(self):
 		shutil.rmtree('new-test')
@@ -35,9 +33,7 @@ class TestSuccess(unittest.TestCase):
 		self.assertTrue(os.path.isfile("new-test/containers/attacker/Dockerfile"))	
 		self.assertTrue(os.path.isfile("new-test/containers/target/Dockerfile"))	
 	
-		f = open('new-test/config.yaml','r')
-		self.assertEqual(f.read(),'{library: hello}\n')
-		f.close()
+		self.assertTrue(os.path.isfile('new-test/config.yaml'))
 
 	def tearDown(self):
 		shutil.rmtree('new-test')
