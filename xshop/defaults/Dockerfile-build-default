@@ -1,27 +1,19 @@
-FROM xshop:build_image
+FROM debian:stable
 
-# Some set up
-ENV USER='build' LOGNAME='build'
+RUN apt-get update
+RUN apt-get -y install gcc
+RUN apt-get -y install make
+RUN apt-get -y install checkinstall
+RUN apt-get -y install lintian
+{% for dep in builddeps %}
+RUN apt-get -y install {{ dep }}
+{% endfor %}
 
 # Add tarball
 ADD {{ library }}-{{ version }}.tar.gz /home/
 
-# Retar the file for dh-make
-WORKDIR /home/
-RUN tar -czf {{ library }}-{{ version }}.tar.gz {{ library }}-{{ version }}
-RUN rm -rf /home/{{ library }}-{{ version }}
-RUN tar -xf /home/{{ library }}-{{ version }}.tar.gz
-
-
-# Run dh-make
+# Build
 WORKDIR /home/{{ library }}-{{ version }}
-RUN echo 's\n\n' | dh_make -f ../{{ library }}-{{ version }}.tar.gz
-RUN rm debian/*.ex debian/*.EX debian/README.*
-
-# Copy in supplied debian configuration
-ADD debian/* debian/
-
-RUN debuild --no-lintian -S -us -uc
-
-# Run cowbuilder on container start
-CMD cowbuilder --build /home/{{ library }}_{{ version }}-1.dsc
+RUN ./configure
+RUN make
+RUN checkinstall

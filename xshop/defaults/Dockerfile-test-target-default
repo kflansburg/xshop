@@ -8,17 +8,7 @@ ENV CONTAINER_NAME {{ container_name }}
 
 WORKDIR /home/
 
-{% if install_type=="source" %}
-    RUN apt-get -y build-dep {{ library }}
-
-    ADD {{ library }}-{{ version }}.tar.gz /home/
-    WORKDIR /home/{{ library }}-{{ version }}
-
-    RUN ./Configure
-    RUN make
-    RUN make install
-
-{% elif install_type=="debian" %}
+{% if install_type=="debian" %}
     ADD {{ library }}-{{ version }} /home/
 
     RUN dpkg -i {{ library }}_{{ version }}-1_amd64.deb
