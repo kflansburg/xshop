@@ -21,7 +21,9 @@
     * Leverage package manager to satisfy dependencies
 
 ## Template System
+
 ### File Templating
+
 To make files easier to author for general cases, a template system is used to populate files with parameters specific to a given build before the build is run. 
 
 For example, the dafault Dockerfile for installing a library that is available in a repository is: 
@@ -42,18 +44,11 @@ FROM xshop:base_image
 {% endif %}
 
 {% for pack in deps %}
-RUN apt-get -y install {{pack}}
+RUN apt-get -y install {{ pack }}
 {% endfor %}
 ```
 
-Each build scenario containers the following variables: `ARCH` (ex. amd64), `DIST` (ex. ubuntu), `RELEASE` (ex. vivid), `VERSION` (ex. 1.0.1-beta1).  
 ## Project Layout
-
-### Build Project
-
-A build project is intended to assist in developing the configuration information necessary to build packages for many different versions of a library. 
-
-### Test Project
 
 A test project is intended to describe a particular CVE and test it against a library. The folder hierarchy is as follows:
 
@@ -68,6 +63,8 @@ PROJECT_NAME
 |- test				# Folder containing a hook script and any supporting code to run the test. This is copied into every container
 |  |- xshop_test.py		# Provided script with hook functions. 
 |  |- exploit.py		# User provided implemention of exploit
+|- build
+|  |- Dockerfile
 ```
 
 ## Testing
@@ -87,11 +84,11 @@ To run tests, from the root project directory:
 #### Creating a Project
 Start a new project ( as an example we will use the Heartbleed bug ):
 ```
-xshop new test openssl Heartbleed
+xshop new openssl Heartbleed
 ```
-The general format is `xshop new [project type] [target library] [project name]`. The project name doesn't matter and is for personal organization. The target library should be what is used to name the source tarballs. 
+The general format is `xshop new [target library] [project name]`. The project name doesn't matter and is for personal organization. The target library should be what is used to name the source tarballs. 
 
-This creates the default test folder structure mentioned above. The containers folder holds the Docker build context for each participant container in the test environement. The docker-compose.yml describes these containers and any linking between them. The test directory contains a file of hook functions, `xshop_test.py`, which allow you to describe how your code should be executed to perform the test, and in which container. The whole test directory is copied into every container during testing and the hooks run. 
+This creates the default folder structure mentioned above. The containers folder holds the Docker build context for each participant container in the test environement. The docker-compose.yml describes these containers and any linking between them. The test directory contains a file of hook functions, `xshop_test.py`, which allow you to describe how your code should be executed to perform the test, and in which container. The whole test directory is copied into every container during testing and the hooks run. 
 
 For this example, the docker-compose.yml file is fine because we want to have a the target running a rudimentary OpenSSL server, and the attacker connecting to it to perform the exploit. In the test folder, I place a python script whose main() function performs the attack and returns 1 for success and 0 for failure. In xshop\_test.py: 
 ```
