@@ -102,8 +102,6 @@ def run_test(version,install_type):
 	cwd = os.getcwd()
 	
 	try:
-		#TODO Check version available
-
 		# Get containers
 		containers = parse_docker_compose()
 		
@@ -115,6 +113,12 @@ def run_test(version,install_type):
 		# Prepare Build
 		logging.info(colors.colors.OKGREEN+"Preparing Build Context."+colors.colors.ENDC)
 		prepare_build(containers,d)
+
+		if install_type=='debian':
+			# Copy in package
+			in_path = '../packages/'+library+'-'+version
+			out_path = 'containers/target/'+library+'-'+version
+			shutil.copytree(in_path,out_path)
 
 		# Check for base test image	
 		logging.info(colors.colors.OKGREEN+"Rebuilding Base Test Image."+colors.colors.ENDC)
