@@ -9,6 +9,7 @@ from xshop import template
 from xshop import exceptions
 from xshop import dockerw
 from xshop import config
+from xshop import versionmanager
 import logging
 from subprocess import Popen as sh
 import os
@@ -37,14 +38,6 @@ def clean(output_path):
 
         if os.path.isdir('build-tmp'):
                 shutil.rmtree('build-tmp')
-
-#
-#	Verifies that source file is available
-#
-def check_source(library, version):
-	source_path = 'source/'+library+'-'+version+'.tar.gz'
-	if not os.path.isfile(source_path):
-		raise Exception('The source tarball could not be found in source/')
 
 #
 #	Copies files used to build into context
@@ -98,8 +91,6 @@ def build(version):
 	clean(output_path)
 
 	try:
-		# Check that source exists
-		check_source(library,version)
 	
 		# Construct build context
 		make_build_context(d)
@@ -122,6 +113,10 @@ def finish_logging(library,version,log):
 def build_version(version):
 	c = config.Config()
 	library = c.get('library')
+	versions = versionmanager.detect_source(library,'source') 
+	c.put('source-versions',sorted(versions))
+	if not version in versions:
+		raise exceptions.BuildError('Source version '+version+' not found in source folder.')
 	logging.basicConfig(filename='build.log',level=logging.DEBUG)
 	log = logging.getLogger()
 	print colors.colors.BOLD+"Packaging "+version+": "+colors.colors.ENDC,
@@ -148,6 +143,10 @@ def build_version(version):
 		return False
 
 	finish_logging(library,version,log)
+	bversions = c.get('built-versions')
+	bversions = sorted(list(set(bversions.append(version))))
+	c.put('built-versions', bversions)
+	
 	return True
 
 
@@ -170,10 +169,6 @@ def build_multiple(rebuild):
 	# Wrap in try to prevent errors from stopping the build. 
 	for v in versions:
 		try:
-			if build_version(v):
-				bversions.append(v)
-				c.put('built-versions',bversions)
+			build_version(v)
 		except Exception as e:
 			print(e)
-
-				
