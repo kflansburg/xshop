@@ -56,6 +56,7 @@ def new_test_project(library, name):
 	shutil.copy2(xshop_path+"/defaults/Dockerfile-build-default",name+'/build/Dockerfile')
 
 	os.chdir(name)
+	config.generate_new_config()
 	c = config.Config()
 	c.put('upstream-url',None)
 	c.put('dependencies',[])
