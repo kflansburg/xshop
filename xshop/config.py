@@ -8,16 +8,12 @@
 
 import os
 import yaml
-
-#
-#	Checks if there is a .config file in the working 
-#	diractory (implying that this is a project folder)
-#
-def check():
-	if os.path.isfile("config.yaml"):
-		return True
-	else:
-		return False
+from xshop import exceptions
+def generate_new_config():
+	config = {}
+	f = open('config.yaml','w')
+	f.write(yaml.dump(config))
+	f.close()
 
 #
 #	Object which represents a config file and allows
@@ -33,8 +29,7 @@ class Config:
 		if os.path.isfile(self.path):
 			self.load_config()
 		else:
-			self.generate_new_config()
-	
+			raise exceptions.ConfigError("Config not found, are you in a project directory?")	
 	#
 	#	Initializes config as empty dict and saves
 	#	
