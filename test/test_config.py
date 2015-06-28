@@ -1,22 +1,8 @@
 import unittest
 from xshop import config
+from xshop import exceptions
 import os
 import shutil
-
-class TestFileExists(unittest.TestCase):
-	def setUp(self):
-		os.mkdir('config_test')
-		os.chdir('config_test')
-		f = open('config.yaml','w')
-		f.write("foobar")
-		f.close()
-
-	def test(self):
-		self.assertTrue(config.check())
-
-	def tearDown(self):
-		os.chdir("..")
-		shutil.rmtree("config_test")
 
 class TestFileMissing(unittest.TestCase):
 	def setUp(self):
@@ -24,22 +10,8 @@ class TestFileMissing(unittest.TestCase):
 		os.chdir('config_test')
 
 	def test(self):
-		self.assertFalse(config.check())
-
-	def tearDown(self):
-		os.chdir("..")
-		shutil.rmtree("config_test")
-
-class TestConfigNoConfig(unittest.TestCase):
-	def setUp(self):
-		os.mkdir('config_test')
-		os.chdir('config_test')
-
-	def test(self):
-		config.Config()
-		f = open('config.yaml','r')
-		self.assertEqual(f.read(),'{}\n')
-		f.close()
+		with self.assertRaises(exceptions.ConfigError):
+			config.Config()	
 
 	def tearDown(self):
 		os.chdir("..")
@@ -79,12 +51,28 @@ class TestConfigGet(unittest.TestCase):
 		os.chdir("..")
 		shutil.rmtree("config_test")
 
+class TestGenerateConfig(unittest.TestCase):
+	def setUp(self):
+		os.mkdir('config_test')
+		os.chdir('config_test')
+
+	def test(self):
+		config.generate_new_config()
+		f = open('config.yaml','r')
+		self.assertEqual(f.read(),'{}\n')
+		f.close()
+
+	def tearDown(self):
+		os.chdir('..')
+		shutil.rmtree('config_test')
+		
 class TestConfigPut(unittest.TestCase):
 	def setUp(self):
 		os.mkdir('config_test')
 		os.chdir('config_test')
 
 	def test(self):
+		config.generate_new_config()
 		config.Config().put('foo','bar')
 		f = open('config.yaml','r')
 		self.assertEqual(f.read(),'{foo: bar}\n')
