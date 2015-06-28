@@ -1,67 +1,85 @@
-#! /usr/bin/python2.7
+#!/usr/bin/python2.7
+
+from optparse import OptionParser
 from xshop import new
-from xshop import test
 from xshop import build
 from xshop import config
-from xshop import version
+from xshop import test
 import sys
-from sets import Set
-args = sys.argv
+from xshop import colors
+def print_general_help():
+	print "XSHOP"
+	print "\tAvailable Commands:"
+	print "\t\tnew\tCreate new project"
+	print "\t\tbuild\tBuild packages from source"
+	print "\t\ttest\tRun tests"
 
-#
-#	new [library] [name]
-#
-if args[1]=='new':
-	if len(args)<4:
-		print ("Insufficient arguments.")
-	elif len(args)>4:
-		print ("Too many arguments.")
+def print_new_help():
+	print "XSHOP - new"
+	print "\txshop new [library] [project name]"
+	print "\tLibrary name must reflect the name used for source tarballs"
+	print "\tProject name is arbitrary"
 	
-	new.new_test_project(args[2],args[3])
-
-#
-#	test [source] [version]
-#
-elif args[1]=='test':
-	FORCE = False
-	if args[3]=='-f':
-		FORCE=True
-		version = args[4]
-	else:
-		FORCE=False
-		version = args[3]
-
-	source = args[2]
-	if source=='source':
-		source='debian'
+def run_test(source,version):
+	print colors.colors.BOLD+"Testing "+version+": "+colors.colors.ENDC,
+	if source =='source':
+		source = 'debian'
+		# Build source
 		c = config.Config()
 		bversions = c.get('built-versions')
-		if (not version in bversions) or FORCE:
+		if (not version in bversions) or options.force:
 			build.build_version(version)
-			bversions.append(version)
-			c.put('built-versions',sorted(list(set(bversions))))
 
-	print test.run_test(version,source)
+	if test.run_test(version,source):
+		print colors.colors.FAIL + "Vulnerable"+colors.colors.ENDC
+	else:
+		print colors.colors.OKGREEN + "Invulnerable"+colors.colors.ENDC
 
-#
-#	build			- Builds all versions which have not been successfully built 
-# 	build [version] 	- Builds version specified
-#	build -f		- Builds all versions
-#
-elif args[1]=='build':
-	# Go ahead and detect versions
-	c = config.Config()
-	c.put('source-versions',sorted(version.detect_source(c.get('library'),'source')))
-	if len(args)==2:
-		build.build_multiple(False)
-	elif args[2]=='-f':
-		build.build_multiple(True)
-	else:	
-		if build.build_version(args[2]):
-			bversions = c.get('built-versions')
-			bversions.append(args[2])
-			c.put('built-versions',sorted(list(set(bversions))))
+if len(sys.argv)<2:
+	print_general_help()
+elif sys.argv[1] =='new':
+	if len(sys.argv)<4 or len(sys.argv)>4 or sys.argv[2]=='-h' or sys.argv[2]=='--help':
+		print_new_help()
+	else:
+		library = sys.argv[2]
+		project = sys.argv[3]
+		print "Building project "+project+" for library "+library+"."
+		new.new_test_project(library, project)
+elif sys.argv[1] =='build':
+	usage = "usage: %prog build [options] [version]\n\tIf no version, builds all."
+	parser = OptionParser(usage=usage)
+	parser.add_option("-f","--force", action="store_true", dest="force", help="Force rebuild of any source files.", default=False)
+	(options,args) = parser.parse_args(sys.argv[2:])
+	if len(args)==0:
+		build.build_multiple(options.force)
+	elif len(args)==1:
+		build.build_version(args[0])
+	else:
+		parser.print_help()
+		print "Too many arguments"
 		
+elif sys.argv[1] =='test':
+	usage = "usage: %prog test [options] [source] [version1] [version2] ...\n\tMust specify at least one version."
+	parser = OptionParser(usage=usage)
+	parser.add_option("-f","--force", action="store_true", dest="force", help="Force rebuild of any source files.", default=False)
+	(options,args) = parser.parse_args(sys.argv[2:])
+	if len(args)==0:
+		parser.print_help()
+		print "Please specify a installation source [source|remote|debian]"
+	elif len(args)>=2:
+		source = args[0]
+		versions = args[1:]
+	
+	if not source in ['remote','debian','source']:
+		parser.print_help()
+		print "Source '"+source+"' not recognized."
+	else:
+		for version in versions:
+			try:
+				run_test(source,version)
+			except Exception as e:
+				print (e)
+			
 else:
-	print ("Command not recognized: "+args[1])
-		
+	print_general_help()
+	print "Command '"+sys.argv[1]+"' not recognized."
