@@ -1,6 +1,7 @@
 #!/usr/bin/python2.7
 
 from optparse import OptionParser
+import logging
 from xshop import new
 from xshop import build
 from xshop import config
@@ -21,16 +22,11 @@ def print_new_help():
 	print "\tProject name is arbitrary"
 	
 def run_test(source,version):
-	print colors.colors.BOLD+"Testing "+version+": "+colors.colors.ENDC,
-	if source =='source':
-		source = 'debian'
-		# Build source
-		c = config.Config()
-		bversions = c.get('built-versions')
-		if (not version in bversions) or options.force:
-			build.build_version(version)
+	d = {'version':version}	
+	t = test.TestCase(d,source)
 
-	if test.run_test(version,source):
+	print colors.colors.BOLD+"Testing: "+colors.colors.ENDC+str(d),
+	if t.run():
 		print colors.colors.FAIL + "Vulnerable"+colors.colors.ENDC
 	else:
 		print colors.colors.OKGREEN + "Invulnerable"+colors.colors.ENDC
@@ -48,12 +44,13 @@ elif sys.argv[1] =='new':
 elif sys.argv[1] =='build':
 	usage = "usage: %prog build [options] [version]\n\tIf no version, builds all."
 	parser = OptionParser(usage=usage)
-	parser.add_option("-f","--force", action="store_true", dest="force", help="Force rebuild of any source files.", default=False)
 	(options,args) = parser.parse_args(sys.argv[2:])
 	if len(args)==0:
-		build.build_multiple(options.force)
+		logging.basicConfig(filename='build.log',level=logging.DEBUG)	
+		build.build_all()
 	elif len(args)==1:
-		build.build_version(args[0])
+		logging.basicConfig(filename='build.log',level=logging.DEBUG)	
+		build.build({'version':args[0]})
 	else:
 		parser.print_help()
 		print "Too many arguments"
@@ -75,10 +72,7 @@ elif sys.argv[1] =='test':
 		print "Source '"+source+"' not recognized."
 	else:
 		for version in versions:
-			try:
-				run_test(source,version)
-			except Exception as e:
-				print (e)
+			run_test(source,version)
 			
 else:
 	print_general_help()
