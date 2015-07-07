@@ -9,6 +9,15 @@
 import os
 import yaml
 from xshop import exceptions
+
+def parse_docker_compose():
+	f = open('docker-compose.yml','r')
+	return yaml.load(f.read())
+
+
+#
+#	Creates empty config file
+#
 def generate_new_config():
 	config = {}
 	f = open('config.yaml','w')
