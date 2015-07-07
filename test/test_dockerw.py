@@ -187,7 +187,7 @@ class TestRunningHook(unittest.TestCase):
 		dockerw.compose_up()
 
 	def test(self):
-		self.assertEqual(dockerw.run_hook('xshop_target_1','run_exploit'),132)
+		self.assertEqual(dockerw.run_hook('xshop_target_1','run_exploit')['ret'],132)
 
 	def tearDown(self):
 		dockerw.compose_down()
