@@ -20,6 +20,7 @@ from docker import Client
 import json
 from xshop import exceptions
 from xshop import colors
+from xshop import config
 import subprocess
 import re
 import sys
@@ -38,21 +39,6 @@ def run_docker_command(command):
 	logging.error(stderr)
         if process.returncode:
                 raise exceptions.DockerError(stderr)
-
-
-#
-#	Helper function to parse docker compose yaml
-#
-def parse_docker_compose():
-        regex = re.compile("^([\S]+):\n")
-
-        containers = []
-        f = open('docker-compose.yml')
-        for line in f.readlines():
-                m = regex.match(line)
-                if m:
-                        containers.append(m.group(1))
-        return containers
 
 #
 #	Checks whether a container name exists, running
@@ -116,7 +102,7 @@ def compose_up():
 #
 def compose_down():
 	# Get list of project containers
-	containers = parse_docker_compose()
+	containers = [c for c in config.parse_docker_compose()]
 	
 	# Kill each one. Docker-compose kill can be ineffective
 	containers = map(lambda c: "xshop_"+c+"_1", containers)
@@ -136,11 +122,13 @@ def run_hook(container,hook):
 	# Create exec
 	job = c.exec_create(container, 'python2 -c "import xshop_test;import sys;sys.exit(xshop_test.'+hook+'())"')	
 
-	# Run 	
+	# Run 
+	out = ""	
 	for line in c.exec_start(job,stream=True):
+		out+=line
 		logging.info(line)
 
-	return c.exec_inspect(job)['ExitCode']
+	return {'stdout':out,'ret':c.exec_inspect(job)['ExitCode']}
 	
 def run_privileged(input_image, output_image, command):
 	remove_container('xshop_privileged_run')	
