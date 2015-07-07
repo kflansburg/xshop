@@ -17,16 +17,19 @@ import shutil
 from sets import Set
 from xshop import colors
 
+TMP_FOLDER='build-tmp'
+
 #
 #	Collects build config into dictionary for templating
 #
-def build_template_dict(c,version):
+def build_template_dict(c,var):
         d = {'library':c.get('library'),
                 'name':c.get('name'),
                 'email':c.get('email'),
                 'builddeps':c.get('build-dependencies'),
-                'deps':c.get('dependencies'),
-                'version':version}
+                'deps':c.get('dependencies')}
+	for key in var:
+		d[key]=var[key]
 	return d
 
 #
@@ -36,32 +39,29 @@ def clean(output_path):
         if os.path.isdir(output_path):
                 shutil.rmtree(output_path)
 
-        if os.path.isdir('build-tmp'):
-                shutil.rmtree('build-tmp')
+        if os.path.isdir(TMP_FOLDER):
+                shutil.rmtree(TMP_FOLDER)
 
 #
 #	Copies files used to build into context
 #
-def make_build_context(d):
+def make_build_context(d,source_path):
 	# Copy and template build/ to build-tmp/
-	template.copy_and_template('build','build-tmp',d)
+	template.copy_and_template('build',TMP_FOLDER,d)
 
 	# Copy in Tarball
-	source_path = 'source/'+d['library']+'-'+d['version']+'.tar.gz'
-        shutil.copy2(source_path,'build-tmp/')
+        shutil.copy2(source_path,TMP_FOLDER+'/')
         
 
 #
 #	Copies out deb
 #
-def copy_build_result(library,version):
-	output_path = 'packages/'+library+'-'+version+'/'
-	deb_path = 'xshop_lintian:/home/'+library+'-'+version+'/'+library+'_'+version+'-1_amd64.deb'
-	dockerw.run_docker_command(['docker','cp',deb_path,output_path])
+def copy_build_result(deb_path,pkg_path):
+	deb_path = 'xshop_lintian:'+deb_path
+	dockerw.run_docker_command(['docker','cp',deb_path,pkg_path])
 
-def run_lintian(library,version):
+def run_lintian(deb_path):
 	try:
-		deb_path = '/home/'+library+'-'+version+'/'+library+'_'+version+'-1_amd64.deb'
 		dockerw.remove_container('xshop_lintian')
 		dockerw.run_docker_command(['docker',
                         'run',
@@ -76,99 +76,57 @@ def run_lintian(library,version):
 #	Function to perform build on a given version tarball in
 # 	/source and output resulting package to /packages
 #
-def build(version):
+def build(d):
 
 	# Get project config
 	c = config.Config()
 	library = c.get('library')
+	version = d['version']
+	templated = build_template_dict(c,d)
 
-	# Assemble template dictionary
-	d = build_template_dict(c,version)
-	
-	output_path = 'packages/'+library+'-'+version
+	# Directory to place packages in 
+	deb_path = '/home/'+library+'-'+version+'/'+library+'_'+version+'-1_amd64.deb'
+	source_path = 'source/'+library+'-'+version+'.tar.gz'
+	pkg_path = 'packages/'+library+'_'+'_'.join(map(lambda x: d[x], sorted(d.keys()))) 
 
-	# Clean old files
-	clean(output_path)
-
-	try:
-	
-		# Construct build context
-		make_build_context(d)
-		
-		# Construct build image
-		dockerw.run_docker_command(['docker','build','-t','xshop:build-tmp','build-tmp/'])
-
-	finally:
-		shutil.rmtree('build-tmp')
-
-def finish_logging(library,version,log):
-	handlers = log.handlers[:]
-	for handler in handlers:
-    		handler.close()
-    		log.removeHandler(handler)
-	if not os.path.isdir('packages/'+library+'-'+version):
-		os.mkdir('packages/'+library+'-'+version)
-	shutil.move('build.log','packages/'+library+'-'+version+'/build.log')
-
-def build_version(version):
-	c = config.Config()
-	library = c.get('library')
+	# Check that tarball is available
 	versions = versionmanager.detect_source(library,'source') 
-	c.put('source-versions',sorted(versions))
 	if not version in versions:
 		raise exceptions.BuildError('Source version '+version+' not found in source folder.')
-	logging.basicConfig(filename='build.log',level=logging.DEBUG)
-	log = logging.getLogger()
+	
+	
 	print colors.colors.BOLD+"Packaging "+version+": "+colors.colors.ENDC,
-	try:
-		build(version)
-		print colors.colors.BOLD+"Build - "+colors.colors.OKGREEN+"Success. "+colors.colors.ENDC,
-	except exceptions.BuildError as e:
-		print colors.colors.BOLD+"Build - "+colors.colors.FAIL+"Failed."+colors.colors.ENDC
-		finish_logging(library,version,log)
-		return False
-
-	try:
-		run_lintian(library,version)
-		print colors.colors.BOLD+"Lintian - "+colors.colors.OKGREEN+"Success."+colors.colors.ENDC,
-	except exceptions.LintianError as e:
-		print colors.colors.BOLD+"Lintian - "+colors.colors.FAIL+"Failed."+colors.colors.ENDC,
 	
+	# Clean old files
+	clean(pkg_path)
+
 	try:
-		copy_build_result(library, version)
-		print colors.colors.BOLD+"Copying Results - "+colors.colors.OKGREEN+"Success."+colors.colors.ENDC
-	except exceptions.DockerError as e:
-		print colors.colors.BOLD+"Copying Results - "+colors.colors.FAIL+"Failed."+colors.colors.ENDC
-		finish_logging(library,version,log)
-		return False
-
-	finish_logging(library,version,log)
-	bversions = c.get('built-versions')
-	bversions = sorted(list(set(bversions.append(version))))
-	c.put('built-versions', bversions)
+		# Construct build context
+		make_build_context(templated,source_path)
 	
-	return True
+		# Construct build image
+		dockerw.run_docker_command(['docker','build','-t','xshop:build-tmp',TMP_FOLDER+'/'])
 
+		try:
+			run_lintian(deb_path)
+		except exceptions.LintianError as e:
+			logging.error(e)
+			print colors.colors.FAIL+"Lintian Failed"+colors.colors.ENDC,
 
-def build_multiple(rebuild):
+		copy_build_result(deb_path,pkg_path)
+		print colors.colors.BOLD+"Done!"+colors.colors.ENDC,
+	finally:
+		shutil.rmtree(TMP_FOLDER)
+
+def build_all():
 	c = config.Config()
-	sversions = Set(c.get('source-versions'))
-	bversions = c.get('built-versions')
-	if rebuild:
-		versions = sversions
-		bversions = []
-		c.put('built-versions',bversions)
-	else:
-		versions = sversions - Set(bversions)
-
-	print "Found source for :\n"+str(list(sversions))
-	versions = list(versions)
-	print "Building versions:\n"+str(versions)
-
+	sversions = versionmanager.detect_source(c.get('library'),'source') 
 	# Build each version and if it succeeds, add to build versions list. 
 	# Wrap in try to prevent errors from stopping the build. 
-	for v in versions:
+	for v in sversions:
 		try:
-			build_version(v)
+			build({'version':v})
+			print ""
 		except Exception as e:
+			print colors.colors.FAIL+"FAILED :("+colors.colors.ENDC
 			print(e)
