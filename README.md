@@ -141,29 +141,27 @@ At build time, xshop copies the tarball into the build context. The default Dock
 #### Running
 Next, to run a test. Here is my folder layout:
 ```
+├── build
+├── config.yaml
 ├── containers
 │   ├── attacker
 │   │   └── Dockerfile
 │   └── target
-│       ├── Dockerfile
-│       ├── openssl-1.0.1a
-│       │   ├── openssl_1.0.1a-1_amd64.changes
-│       │   ├── openssl_1.0.1a-1_amd64.deb
-│       │   ├── openssl_1.0.1a-1.debian.tar.xz
-│       │   ├── openssl_1.0.1a-1.dsc
-│       │   └── openssl_1.0.1a.orig.tar.gz
-│       ├── openssl-1.0.1f.tar.gz
-│       ├── openssl-1.0.1g
-│       │   ├── openssl_1.0.1g-1_amd64.changes
-│       │   ├── openssl_1.0.1g-1_amd64.deb
-│       │   ├── openssl_1.0.1g-1.debian.tar.xz
-│       │   ├── openssl_1.0.1g-1.dsc
-│       │   └── openssl_1.0.1g.orig.tar.gz
-│       └── openssl-1.0.1g.tar.gz
+│       └── Dockerfile
 ├── docker-compose.yml
-├── test
-│   ├── heartbleed.py
-│   └── xshop_test.py
+├── packages
+│   ├── openssl-1.0.1a
+│   │   └── openssl_1.0.1a-1_amd64.deb
+│   └── openssl-1.0.1g
+│       └── openssl_1.0.1g-1_amd64.deb
+├── source
+│   ├── openssl-1.0.1f.tar.gz
+│   └── openssl-1.0.1g.tar.gz
+└── test
+    ├── heartbleed.py
+    └── xshop_test.py
+
+9 directories, 10 files
 ```
 
 Note that I have Debian packages for versions `1.0.1a` and `1.0.1g`, as well as source for `1.0.1f` and `1.0.1g`. In the repo, I have `1.0.1a` and `1.0.1g`. For Heartbleed, `1.0.1f` was the last vulnerable version. 
@@ -285,7 +283,7 @@ print T.results()
 `xshop:clang38` is a default container provided by xshop. (These are locates in `xshop/defaults/contexts`). This pulls the latest version of Clang from the llvm subversion repository, and builds it. This takes a few minutes. To build you can run in a python interpreter:
 
 ```
-~/xshop [ python                                                                                                                                                         master * ] 11:03 PM
+~/xshop [ python                           
 Python 2.7.6 (default, Jun 22 2015, 17:58:13) 
 [GCC 4.8.2] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
@@ -296,9 +294,141 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 
 
-And run the test:
+And run the test. I have formated the results for better legibility:
+```
+projects/Heartbleed [ ./run
+Running Test: {'version': '1.0.1a', 'cflag': ''},  Vulnerable
+Running Test: {'version': '1.0.1a', 'cflag': '-fsanitize=address'},  Vulnerable
+Running Test: {'version': '1.0.1g', 'cflag': ''},  Invulnerable
+Running Test: {'version': '1.0.1g', 'cflag': '-fsanitize=address'},  Invulnerable
+[
+	[
+		{
+			'vuln': True, 
+			'results': {
+				'attacker': {
+					'ret': 2, 
+					'stdout': '
+						attacker
+						
+						##################################################################
+						Connecting to: target:443, 1 times
+						
+						Sending Client Hello for TLSv1.0
+						Received Server Hello for TLSv1.0
+	
+						WARNING: target:443 returned more data than it should - server is vulnerable!
+						Please wait... connection attempt 1 of 1
+						##################################################################
+			
+						.@....SC[...r....+..H...9...
+						....w.3....f...
+						.".!.9.8.........5..................
+						.........3.2.....E.D...../...A.................................I.........
+						.4.2..............
+						...................................#'
+				}, 
+				'target': {
+					'ret': 0, 
+					'stdout': 'target'
+				}
+			}, 
+			'vars': {
+				'version': '1.0.1a', 
+				'cflag': ''
+			}
+		}, 
+		{
+			'vuln': True, 
+			'results': {
+				'attacker': {
+					'ret': 2, 
+					'stdout': 'attacker
+			
+						##################################################################
+						Connecting to: target:443, 1 times
+						Sending Client Hello for TLSv1.0
+						Received Server Hello for TLSv1.0
+
+						WARNING: target:443 returned more data than it should - server is vulnerable!
+						Please wait... connection attempt 1 of 1
+						##################################################################
+			
+						.@....SC[...r....+..H...9...
+						....w.3....f...
+						.".!.9.8.........5..................
+						.........3.2.....E.D...../...A.................................I.........
+						.4.2..............
+						...................................#'
+				}, 
+				'target': {
+					'ret': 0, 
+					'stdout': 'target'
+				}
+			}, 
+			'vars': {
+				'version': '1.0.1a', 
+				'cflag': '-fsanitize=address'
+			}
+		}
+	], 
+	[
+		{
+			'vuln': False, 
+			'results': {
+				'attacker': {
+					'ret': 0, 
+					'stdout': 'attacker
+			
+						##################################################################
+						Connecting to: target:443, 1 times
+						Sending Client Hello for TLSv1.0
+						Received Server Hello for TLSv1.0
+					
+						Error Receiving Record! timed out
+						No heartbeat response received, server likely not vulnerable
+						Please wait... connection attempt 1 of 1
+						##################################################################'
+				}, 
+				'target': {
+					'ret': 0, 
+					'stdout': 'target'
+				}
+			}, 
+			'vars': {
+				'version': '1.0.1g', 
+				'cflag': ''
+			}
+		}, 
+		{
+			'vuln': False, 
+			'results': {
+				'attacker': {
+					'ret': 0, 
+					'stdout': 'attacker
+			
+						##################################################################
+						Connecting to: target:443, 1 times
+						Sending Client Hello for TLSv1.0
+						Received Server Hello for TLSv1.0
+
+						Error Receiving Record! timed out
+						No heartbeat response received, server likely not vulnerable
+						Please wait... connection attempt 1 of 1
+						##################################################################'
+				}, 
+				'target': {
+					'ret': 0, 
+					'stdout': 'target'
+				}
+			}, 
+			'vars': {
+				'version': '1.0.1g', 
+				'cflag': '-fsanitize=address'
+			}
+		}
+	]
+]
 ```
 
-```
-
-Sadly, this experimental address sanitizer would not have prevented Heartbleed
+Sadly, this experimental address sanitizer would not have prevented Heartbleed.

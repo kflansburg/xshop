@@ -3,7 +3,6 @@
 from optparse import OptionParser
 import logging
 from xshop import new
-from xshop import build
 from xshop import config
 from xshop import test
 import sys

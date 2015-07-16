@@ -57,11 +57,8 @@ def new_test_project(library, name):
 	os.chdir(name)
 	config.generate_new_config()
 	c = config.Config()
-	c.put('upstream-url',None)
 	c.put('dependencies',[])
 	c.put('build-dependencies',[])
-	c.put('source-versions', [])
-	c.put('built-versions',[])
 	c.put('library',library)	
 	os.chdir('..')
 
