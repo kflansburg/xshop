@@ -53,7 +53,6 @@ def new_test_project(library, name):
 	shutil.copy2(xshop_path+"/defaults/xshop_test-default.py",name+'/test/xshop_test.py')
 	shutil.copy2(xshop_path+"/defaults/Dockerfile-test-attacker-default",name+'/containers/attacker/Dockerfile')
 	shutil.copy2(xshop_path+"/defaults/Dockerfile-test-target-default",name+'/containers/target/Dockerfile')
-	shutil.copy2(xshop_path+"/defaults/Dockerfile-build-default",name+'/build/Dockerfile')
 
 	os.chdir(name)
 	config.generate_new_config()
@@ -61,8 +60,6 @@ def new_test_project(library, name):
 	c.put('upstream-url',None)
 	c.put('dependencies',[])
 	c.put('build-dependencies',[])
-	c.put('name', None)
-	c.put('email', None)
 	c.put('source-versions', [])
 	c.put('built-versions',[])
 	c.put('library',library)	

@@ -119,6 +119,7 @@ def run_hook(container,hook):
 	
 	c = Client(base_url='unix://var/run/docker.sock')
 
+	
 	# Create exec
 	job = c.exec_create(container, 'python2 -c "import xshop_test;import sys;sys.exit(xshop_test.'+hook+'())"')	
 
