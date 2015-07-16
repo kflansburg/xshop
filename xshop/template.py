@@ -17,7 +17,11 @@ import os
 import shutil
 import re
 
-OMIT = '[\s\S]+(.deb$|.tar.gz$|.swp$|.changes$|.dsc$|.tar.xz$)'
+OMIT = '[\s\S]+(.deb$|.tar.gz$|.swp$|.changes$|.dsc$|.tar.xz$|.tar.bz2$)'
+
+def template_file_contents(path,d):
+	template = templateEnv.get_template( path )
+	return template.render( d )
 
 #
 #	Replaces substitutions within a file. Destructive
