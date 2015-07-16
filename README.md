@@ -215,10 +215,15 @@ RUN make CFLAG="-O3"
 
 Another option for running tests is to use the test module API. 
 
-This exposes two classes, TestCase and Trial. TestCase wraps a fixed set of variables and the method to run a test with those variables. Trial allows you to define multiple independent variables and run all of those tests, returning the results in a multidimensional array. 
+This exposes two classes, `TestCase` and `Trial`. 
+
+`TestCase` wraps a fixed set of variables and the method to run a test with those variables. 
+
+`Trial` allows you to define multiple independent variables and run all of those tests, returning the results in a multidimensional array. 
 
 
-Here is an example for Heartbleed, we modify the target Dockerfile to utilize Clang 3.8, allowing us to test some new features. I have gone ahead and generated certs to copy in to test containers instead of regenerating them each time. 
+Here is an example for Heartbleed, we modify the target Dockerfile to utilize Clang 3.8, allowing us to test some new features. I have gone ahead and generated certs to copy into test containers instead of regenerating them each time. 
+
 
 ```
 FROM xshop:clang38
@@ -277,8 +282,21 @@ T.run()
 print T.results()
 ```
 
+`xshop:clang38` is a default container provided by xshop. (These are locates in `xshop/defaults/contexts`). This pulls the latest version of Clang from the llvm subversion repository, and builds it. This takes a few minutes. To build you can run in a python interpreter:
 
-And run:
+```
+~/xshop [ python                                                                                                                                                         master * ] 11:03 PM
+Python 2.7.6 (default, Jun 22 2015, 17:58:13) 
+[GCC 4.8.2] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from xshop import dockerw
+>>> dockerw.build_image('clang38')
+>>> 
+```
+
+
+
+And run the test:
 ```
 
 ```
