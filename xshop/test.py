@@ -1,26 +1,25 @@
 #
 #	Test
 #
-#		The purpose of this module is to provide functions
-#		which carry out verious testing scenarios. The 
-#		default test works as follows:
-#	
-#		Duplicate the docker compose context
+#		This module defines 2 classes:
 #
-#		Apply templating to populate values
+#		TestCase(dict_of_var_vals,{source|debian|remote}) 
+#			- Models a single test with fixed variables
 #
-#		Copy testing scripts into all build contexts
-#	
-#		Call docker compose to set up the test environment
-#		
-#		Call testing hooks for specified container
+#			TestCase.run() - Runs test and returns true/false
 #
-#		Return results of test and clean up
+#		Trial({var1:[vals],...},{source|debian|remote})
+#			- Describes independent variables for testing and 
+#			manages multiple TestCases
+#
+#			Trial.run() - Runs all tests
+#
+#			Trial.results() - Returns multidimensional array of test results
+#
 #
 
 import copy
 import logging
-from xshop import build
 from xshop import colors
 from xshop import exceptions
 from xshop import template
@@ -28,7 +27,6 @@ from xshop import dockerw
 from xshop import config
 import shutil
 import os
-import re
 
 TMP_FOLDER='test-tmp'
 
@@ -44,48 +42,118 @@ class TestCase:
 		# Get Test Case Variables
 		self.source = source
 		self.d = d
-		self.pkgdir=self.proj_dir+'/packages/'+self.library+'_'+'_'.join(map(lambda x: d[x], sorted(d.keys())))
-	
-	# Creates Docker context for a given container in the test
-	# environment.
-	def __build_context(self,name):
-		# Create Templating Dictionary
+
+		# Initialize Result Values
+		self.vuln=None
+		self.results={}	
+
+	# Builds template dict by adding non independent variables
+	def __templated(self,name):
 		templated = copy.deepcopy(self.d)
-		templated['container_name']=name
-		templated['library']=self.library
-		templated['install_type']=self.source
-	
-		# Copy folder and apply template
-		template.copy_and_template('containers/'+name,
-			TMP_FOLDER+'/containers/'+name,
+		templated['container_name'] = name
+		templated['library'] = self.library
+		templated['install_type'] = self.source
+		templated['builddeps'] = self.config.get('build-dependencies')
+		templated['deps']=self.config.get('dependencies')
+		return templated	
+
+	# Returns the dockerfile of a given container
+	def dockerfile(self,name):
+		templated = self.__templated('target')
+		return template.template_file_contents('containers/%s/Dockerfile'%(name,),
 			templated)
 
-		# Copy in test folder
-		shutil.copytree('test',TMP_FOLDER+'/containers/'+name+'/test')
+	# Builds the dockerfile of a container, tagging it as 
+	# xshop:[container]_build
+	def __build_container(self,name, image_name):
+		templated = self.__templated(name)
 
-		# If install source is debian, copy it into target context	
-		if self.source=='debian' and name=='target':
-			shutil.copytree(self.pkgdir, 
-				TMP_FOLDER+'/containers/target/'+self.library+'-'+templated['version'])
+		# Create temporary build context
+		template.copy_and_template("containers/%s"%(name,), 
+			TMP_FOLDER,
+			templated)
 
-	# Creates temporary build dir and constructs contexts for
-	# each container in the experiment inside
-	def __prepare_build(self):
-		os.mkdir(TMP_FOLDER)
-		os.mkdir(TMP_FOLDER+'/containers')
+		# Copy in any necessary files
+		if name=='target':
+			if self.source=='source':
+				source_file = "%s/source/%s-%s.tar.gz"%\
+					(self.proj_dir, self.library, self.d['version'])
+				shutil.copy2(source_file, TMP_FOLDER+"/")
+			elif self.source=='debian':
+				pkg_dir = "%s/packages/%s-%s/"%\
+					(self.proj_dir, self.library, self.d['version'])
+				shutil.copytree(pkg_dir, 
+					TMP_FOLDER+"/%s-%s"%\
+					(self.library, self.d['version'],))
 
-		# Copy docker-compose.yml
-		shutil.copy2('docker-compose.yml',TMP_FOLDER+'/docker-compose.yml')
 
-		# Constuct each context
+		dockerw.run_docker_command(['docker','build','-t',image_name,TMP_FOLDER])
+		
+		shutil.rmtree(TMP_FOLDER)
+
+	# Builds each container from supplied Dockerfile	
+	def __build_containers(self):
 		for c in self.containers:
-			self.__build_context(c)
-	
-		# Move into temporary directory
-		os.chdir(TMP_FOLDER)
-	
-	# Removes temporary build directory
-	def __clean(self):
+			logging.info(colors.colors.OKGREEN\
+				+"Building %s"%(c,)\
+				+colors.colors.ENDC)
+			self.__build_container(c,"xshop:%s_build"%(c,))
+			logging.info(colors.colors.OKGREEN\
+				+"Done."\
+				+colors.colors.ENDC)
+
+	# Creates temporary context to launch experiment with docker compose
+	def __create_compose_context(self):
+		os.mkdir(TMP_FOLDER)
+		os.mkdir(TMP_FOLDER+"/containers")
+		# For each container
+		for c in self.containers:
+			# Create Context Folder
+			os.mkdir(TMP_FOLDER+"/containers/"+c)
+			# Copy in test code
+			shutil.copytree(self.proj_dir+'/test',
+				TMP_FOLDER+"/containers/"+c+"/test")
+			# Write out Dockerfile
+			f=open(TMP_FOLDER+"/containers/"+c+"/Dockerfile",'w')
+			f.write("FROM xshop:%s_build\n"\
+				"ADD test /home/\n"\
+				"WORKDIR /home/\n"%\
+				(c,))
+			f.close()
+
+		# Copy in compose file
+		shutil.copy2(self.proj_dir+'/docker-compose.yml',
+			TMP_FOLDER+'/docker-compose.yml')
+
+	# Cleans up logging
+	def __end_logging(self):
+		for handler in self.log.handlers[:]:
+			handler.close()
+			self.log.removeHandler(handler)
+
+	#
+	# Builds target container as xshop_[library]:[sorted_var_vals]
+	# Outputs dockerfile to build/ as Dockerfile_[sorted_var_vals]
+	# 
+	def build(self):
+		logging.basicConfig(filename='build.log',level=logging.DEBUG)	
+		self.log=logging.getLogger()
+		print colors.colors.BOLD+"Building: "+colors.colors.ENDC+str(self.d)+": ",
+		name = '_'.join(map(lambda x: self.d[x],sorted(self.d.keys())))
+		image_name='xshop_%s:%s'%(self.library, name)
+		try:
+			self.__build_container('target',image_name)
+			f = open(self.proj_dir+'/build/Dockerfile_'+name,'w')
+			f.write(self.dockerfile('target'))
+			f.close()
+			print colors.colors.OKGREEN+"Done."+colors.colors.ENDC
+		except Exception as e:
+			print colors.colors.FAIL+"Error!"+colors.colors.ENDC
+			print e
+		self.__end_logging()
+
+	# Removes temporary test resources
+	def __clean_test(self):
 		# Remove temporary compose folder
 		os.chdir(self.proj_dir)
 		if os.path.isdir(TMP_FOLDER):
@@ -94,12 +162,9 @@ class TestCase:
 		# Terminate Test Containers
 		dockerw.compose_down()
 		
-		# End any logging
-		for handler in self.log.handlers[:]:
-			handler.close()
-			self.log.removeHandler(handler)
+		self.__end_logging()
 
-	# Call exploit hook in each container	
+	# Call exploit hook in each container and stores results	
 	def __call_hooks(self):
 		for c in self.containers:
 			logging.info(colors.colors.OKGREEN+"\t"+c+colors.colors.ENDC)
@@ -116,31 +181,41 @@ class TestCase:
 		self.results = {}
 		self.vuln = False
 		try:
-			# If install type is source, build it
-			if self.source=='source':
-				self.source='debian'
-				build.build(self.d)
-		
-			# Prepare Build
-			logging.info(colors.colors.OKGREEN+"Preparing Build Context."+colors.colors.ENDC)
-			self.__prepare_build()
+			print colors.colors.BOLD+"Running Test: "+colors.colors.ENDC+str(self.d)+", ",
+			# Build each test image
+			self.__build_containers()
 
-			# Check for base test image	
-			logging.info(colors.colors.OKGREEN+"Rebuilding Base Test Image."+colors.colors.ENDC)
-			dockerw.build_image('base_test_image')
+			# Create Compose Context
+			logging.info(colors.colors.OKGREEN\
+				+"Constructing Compose Context."\
+				+colors.colors.ENDC)
+			self.__create_compose_context()
+			os.chdir(TMP_FOLDER)
 
-			# Run Docker Compose
+			# Launch Test
+			logging.info(colors.colors.OKGREEN\
+				+"Running Docker Compose Up"\
+				+colors.colors.ENDC)
 			dockerw.compose_up()
 
-			# Call hooks in each container, catching any exceptions
+			# Call hook
 			logging.info(colors.colors.OKGREEN+"Running Hooks:"+colors.colors.ENDC)
 			self.__call_hooks()
+
+			if self.vuln:
+				print colors.colors.FAIL+"Vulnerable"+colors.colors.ENDC
+			else:
+				print colors.colors.OKGREEN+"Invulnerable"+colors.colors.ENDC
+	
 			logging.info(colors.colors.OKGREEN+"Result: "+str(self.vuln)+colors.colors.ENDC)
+		except Exception as e:
+			print colors.colors.BOLD+"ERROR!"+colors.colors.ENDC
+			print e
+			self.vuln = None
 
 		finally:
 			logging.info(colors.colors.OKGREEN+"Cleaning Up."+colors.colors.ENDC)
-			# Clean up
-			self.__clean()
+			self.__clean_test()
 
 		return self.vuln
 
@@ -149,18 +224,20 @@ class TestCase:
 #	independent variables
 #
 class Trial:
-	def __init__(self,cvars,ivars,source):
+	# Accepts ivars and source and saves them as instance variables
+	# Recursively builds multidimensional array of test cases
+	def __init__(self,ivars,source):
 		self.ivars = ivars
-		self.cvars = cvars
 		self.source = source
-		
 		self.cases = self.__array_builder({},copy.deepcopy(self.ivars))	
 
+	# Recursive function for building array of test cases
 	def __array_builder(self,d,ivars):
+		# If no more variable dimensions, create test case
 		if ivars=={}:
 			dnew = copy.deepcopy(d)
-			dnew.update(self.cvars)
-			return {'vars':d,'case':TestCase(dnew,self.source)}
+			return TestCase(dnew,self.source)
+		# Else, pop var and return list of recursive call with each value
 		else:
 			key, value = ivars.popitem()
 			l = []
@@ -169,20 +246,29 @@ class Trial:
 				dnew[key]=v
 				l.append(self.__array_builder(dnew,copy.deepcopy(ivars)))
 			return l
-	def __run_tests(self,obj):
+
+	# Recursively applies func to TestCases and returns results
+	def recursive(self,obj,func):
+		results=[]
 		for o in obj:
 			if isinstance(o,list):
-				self.__run_tests(o)
+				results.append(self.recursive(o,func))
 			else:
-				case = o['case']
-				d = o['vars']
-				print colors.colors.BOLD+"Running Test: "+colors.colors.ENDC+str(d)+", ",
-				if case.run():
-					print colors.colors.FAIL+"Vulnerable"+colors.colors.ENDC
-				else:
-					print colors.colors.OKGREEN+"Invulnerable"+colors.colors.ENDC
+				results.append(func(o))
+		return results
 
 	# Runs a test case for each value
 	def run(self):
-		self.__run_tests(self.cases)
+		self.recursive(self.cases,lambda o: o.run())
 
+	# Return results of all test cases by calling recursive function. 
+	def results(self):
+		return self.recursive(self.cases,
+			lambda o: {
+				'vuln': o.vuln,
+				'vars':o.d,
+				'results':o.results})
+
+	# Builds and tags images for each target container, outputs dockerfiles
+	def build(self):
+		self.recursive(self.cases,lambda o: o.build())
