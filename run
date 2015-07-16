@@ -41,20 +41,6 @@ elif sys.argv[1] =='new':
 		project = sys.argv[3]
 		print "Building project "+project+" for library "+library+"."
 		new.new_test_project(library, project)
-elif sys.argv[1] =='build':
-	usage = "usage: %prog build [options] [version]\n\tIf no version, builds all."
-	parser = OptionParser(usage=usage)
-	(options,args) = parser.parse_args(sys.argv[2:])
-	if len(args)==0:
-		logging.basicConfig(filename='build.log',level=logging.DEBUG)	
-		build.build_all()
-	elif len(args)==1:
-		logging.basicConfig(filename='build.log',level=logging.DEBUG)	
-		build.build({'version':args[0]})
-	else:
-		parser.print_help()
-		print "Too many arguments"
-		
 elif sys.argv[1] =='test':
 	usage = "usage: %prog test [options] [source] [version1] [version2] ...\n\tMust specify at least one version."
 	parser = OptionParser(usage=usage)
