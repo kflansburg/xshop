@@ -5,6 +5,7 @@ import logging
 from xshop import new
 from xshop import config
 from xshop import test
+from xshop import dockerw
 import sys
 from xshop import colors
 def print_general_help():
@@ -53,6 +54,8 @@ elif sys.argv[1] =='test':
 		for version in versions:
 			run_test(source,version)
 			
+elif sys.argv[1]=='build_image':
+	dockerw.build_image(sys.argv[2])
 else:
 	print_general_help()
 	print "Command '"+sys.argv[1]+"' not recognized."
