@@ -8,11 +8,25 @@ from xshop import test
 from xshop import dockerw
 import sys
 from xshop import colors
+
+def source_versions():
+	c = config.Config()
+	library = c.get('library')
+	reg = re.compile("^"+library+"-(.+).tar.[gx]z$")
+	result = []
+	for f in os.listdir('source'):
+		m = reg.match(f)
+		if m:
+			result.append(m.groups(1)[0])
+	return result
+
 def print_general_help():
 	print "XSHOP"
 	print "\tAvailable Commands:"
-	print "\t\tnew\tCreate new project"
-	print "\t\ttest\tRun tests"
+	print "\t\tnew [library] [name]\tCreate new project"
+	print "\t\tbuild_image [image_name]\tBuild xshop base image"
+	print "\t\tbuild\tAttempts to build every source version"
+	print "\t\ttest [source] [version(s)]\tRun tests"
 
 def print_new_help():
 	print "XSHOP - new"
@@ -53,7 +67,10 @@ elif sys.argv[1] =='test':
 	else:
 		for version in versions:
 			run_test(source,version)
-			
+elif sys.argv[1]=='build':
+	versions = source_versions()
+	T = test.Trial({'version':versions}, 'source')
+	T.build()
 elif sys.argv[1]=='build_image':
 	dockerw.build_image(sys.argv[2])
 else:
