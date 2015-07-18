@@ -136,6 +136,9 @@ class TestCase:
 	# Outputs dockerfile to build/ as Dockerfile_[sorted_var_vals]
 	# 
 	def build(self):
+		if os.path.isdir('test-tmp'):
+			shutil.rmtree('test-tmp')
+
 		logging.basicConfig(filename='build.log',level=logging.DEBUG)	
 		self.log=logging.getLogger()
 		print colors.colors.BOLD+"Building: "+colors.colors.ENDC+str(self.d)+": ",
@@ -176,6 +179,8 @@ class TestCase:
 
 	# Runs hooks in test environment
 	def run(self):
+		if os.path.isdir('test-tmp'):
+			shutil.rmtree('test-tmp')
 		logging.basicConfig(filename='test.log',level=logging.DEBUG)	
 		self.log=logging.getLogger()
 		self.results = {}
