@@ -2,6 +2,8 @@
 
 from optparse import OptionParser
 import logging
+import re
+import os
 from xshop import new
 from xshop import config
 from xshop import test
@@ -18,7 +20,7 @@ def source_versions():
 		m = reg.match(f)
 		if m:
 			result.append(m.groups(1)[0])
-	return result
+	return sorted(result)
 
 def print_general_help():
 	print "XSHOP"
@@ -69,6 +71,8 @@ elif sys.argv[1] =='test':
 			run_test(source,version)
 elif sys.argv[1]=='build':
 	versions = source_versions()
+	print "Building Versions:"
+	print versions
 	T = test.Trial({'version':versions}, 'source')
 	T.build()
 elif sys.argv[1]=='build_image':
