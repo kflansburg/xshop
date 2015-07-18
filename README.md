@@ -1,5 +1,24 @@
 #XSHOP
 
+## General Installation
+
+To install, install docker first and add user to docker group, make sure you can run:
+```
+docker info
+```
+
+Then run from the xshop source directory: 
+```
+./install.sh
+```
+
+This:
+
+* Copies module to /usr/lib/python2.7/xshop
+* Copies command line tool to /usr/bin/xshop
+* Installs pip, jinja2, docker-py, docker-compose
+* Builds base image
+
 ## Goals
 
 * Expand CVE metadata
