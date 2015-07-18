@@ -13,6 +13,8 @@ WORKDIR /home/
     RUN apt-get -y install -f
 
 {% elif install_type=="source" %}
+	ADD {{ library }}-{{ version }}.tar.gz /home/
+	WORKDIR /home/{{ library }}-{{ version }}
     RUN ./configure --prefix=/usr
     RUN make
     RUN make install
