@@ -11,7 +11,6 @@ def print_general_help():
 	print "XSHOP"
 	print "\tAvailable Commands:"
 	print "\t\tnew\tCreate new project"
-	print "\t\tbuild\tBuild packages from source"
 	print "\t\ttest\tRun tests"
 
 def print_new_help():
