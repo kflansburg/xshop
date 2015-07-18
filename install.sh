@@ -30,8 +30,7 @@ cp run /usr/bin/xshop
 
 
 echo "Building base_test_image"
-python -c "from xshop import dockerw;dockerw.build_image('base_test_image')"
-
+xshop build_image base_test_image
 echo "Done!"
 
 
