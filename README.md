@@ -13,16 +13,11 @@
     * Keep instructions for compiling old library versions
     * Provide community website for discussion and experimentation
 
-## Implementation Notes
-
-* Utilize Docker to quickly construct containers to describe attack scenarios
-* Store Docker images of common libraries with many versions
-
 ## Template System
 
 ### File Templating
 
-To make files easier to author for general cases, a template system is used to populate files with parameters specific to a given build before the build is run. 
+To make files easier to author for general cases, a template system is used to populate files with parameters specific to a given build before the build is run. This template is applied to the entire build context of each container. 
 
 For example, the dafault Dockerfile for installing a library that is available in a repository is: 
 
@@ -41,6 +36,8 @@ RUN apt-get -y install {{ pack }}
 {% endfor %}
 ```
 
+Keep in mind that Docker caches consecutive builds up until a new Dockerfile command is found, so try to keep as much of the file the same as possible for different variables, with differing commands placed at the end of the file. 
+
 ## Project Layout
 
 A project is intended to describe a particular CVE and test it against a single library. Many different experiments can be run to see how the CVE is affected by different situations. The folder hierarchy is as follows:
@@ -58,19 +55,19 @@ PROJECT_NAME
 |  |  |- Dockerfile
 |- test				
 |  |- xshop_test.py	
-|  |- exploit.py		
 |- build
 ```
 
 `config.yaml` stores project constants like library name.
 
-`docker-compose.yml` is used to describe the scenario involved in the exploit including each container and how they are connected. 
+`docker-compose.yml` is used to describe the scenario involved in the exploit including each container and how they are connected. As an example you can set up two communicating containers and perform a MitM attack, a container providing a perticular service and an attacker (used in this Heartbleed example), or a standalone container to check privilege escalation attacks. 
 
 `packages` is where users can place `.deb` packages to quickly install prebuilt versions of the library.
 
 `source` is where users can place source tarballs.
 
-xshop automatically copies the correct source/package version into the build context of the target as long as it follows the proper naming convention. 
+xshop automatically copies the correct source/package version into the build context of the target as long as it follows the proper naming convention:
+
 ```
 [library]-[version].tar.gz
 ```
@@ -81,15 +78,10 @@ for source.
 ```
 for debian. 
 
-## Testing
+The `containers` directory holds the build context for each player in the test. Say you want additional files to be available to add when building a container, place them in the folder for that container.
 
-Tests are written using Python's `unittest` module. They are not exhaustive but descibe the main desired functionality. Edge cases will be added as they are discovered. 
+The contents of the `test` directory is copied into every container at `/home/`. The hook `run_exploit()` in `xshop_test.py` is where you should perform your exploit. A return code of `2` indicates the exploit succeeded, `0` indicates it failed, and any other nonzero code is considered an error. 
 
-Integration testing should ensure that changes don't break the main functionality for typical cases.
-
-To run tests, from the root project directory:
-
-`python -m unittest discover`
 
 ## Usage
 
@@ -97,14 +89,15 @@ To run tests, from the root project directory:
 
 #### Creating a Project
 Start a new project ( as an example we will use the Heartbleed bug ):
+
 ```
 xshop new openssl Heartbleed
 ```
+
 The general format is `xshop new [target library] [project name]`. The project name doesn't matter and is for personal organization. The target library should be what is used to name the source tarballs. 
 
-This creates the default folder structure mentioned above. The containers folder holds the Docker build context for each participant container in the test environement. The docker-compose.yml describes these containers and any linking between them. The test directory contains a file of hook functions, `xshop_test.py`, which allow you to describe how your code should be executed to perform the test, and in which container. The whole test directory is copied into every container during testing and the hooks run. 
+In the test folder, I place a python script whose main() function performs the attack and returns 2 for success and 0 for failure. In `xshop\_test.py`: 
 
-For this example, the docker-compose.yml file is fine because we want to have a the target running a rudimentary OpenSSL server, and the attacker connecting to it to perform the exploit. In the test folder, I place a python script whose main() function performs the attack and returns 1 for success and 0 for failure. In xshop\_test.py: 
 ```
 import os
 import heartbleed
@@ -117,24 +110,26 @@ def run_exploit():
 
 Note that each container has an environment variable `CONTAINER_NAME` containing the name assigned to it in the docker-compose.yml file. This allows only executing code on one container and returning 0 for the rest. The results of the test are considered to be the OR of the return codes of the hooks run in each container, so every container not actually performing the exploit should return 0. 
 
-The attacker container should be configured properly, but we need to set up the target to make sure the library is installed properly. Here we have several options: installing from a repository, installing from a Debian package, installing from source. I will discuss each. 
+The attacker container should be configured properly because xshop will copy in the test folder and run the exploit hook. We need to set up the target to make sure the library is installed properly. Here we have several options: installing from a repository, installing from a Debian package, installing from source. I will discuss each. 
 
-Note that the responsibilty of properly installing the library is left to the user. The Dockerfile in `containers/target/Dockerfile` contains sane defaults for performing this installation, familiarize yourself with what this does. 
+Note that the responsibilty of properly installing the library is left to the user because it varies wildly by library. The Dockerfile in `containers/target/Dockerfile` contains sane defaults for performing this installation, familiarize yourself with what this does. 
 
 #### Repository
-If the library and version to be tested is in a repository that is tracked by the container, it is easy to simply provide the information to APT and install this way. One of the goals of this project is to provide a repository of legacy versions prebuilt for debian:stable, #TODO link to list of libraries. 
+If the library and version to be tested is in a repository that is tracked by the container, it is easy to simply provide the information to apt and install this way. One of the goals of this project is to provide a repository of legacy versions prebuilt for debian:stable, #TODO link to list of libraries. 
 
 Additionally if you wish to provide your own repo, say one produced by an xshop build project, you should modify the target Dockerfile to import your signing public key and add the repository to the sources list. #TODO more here. 
 
-In the Dockerfile, notice that for `install_type==remote`, it simply tries to install from APT. 
+In the Dockerfile, notice that for `install_type==remote`, it simply tries to install from apt and substitute in the version for that test. 
 
 #### Debian
-If you have a Debian package, include it in packages as listed above
+If you have a Debian package, include it in `packages` directory as listed above
 
-At build time, xshop copies this package directory in to the build context. In the Dockerfile it copies this into the container and the runs dpkg to install and apt to satisfy dependencies.
+At build time, xshop copies this package directory into the build context. In the Dockerfile it copies this into the container and runs dpkg to install and apt to satisfy dependencies mentioned in the package.
 
 #### Source
-If you have a source tarball, place it in the target build context. You will most likely have to modify the target Dockerfile to get this to compile, in the case of OpenSSL we must run `./config prefix=/usr` instead of `./Configure` and `make install_sw` intead of `make install`. Note that the Dockerfile shows the usage of the template system to select which commands to pass to Docker. Other variables available to you are `library` and `version`. You can use these variables to splice into commands (for instance the apt-get install used for repository install), or you can use them for additional if statement based control. An example of this would be modifying the commands for compilation for very old versions. 
+If you have a source tarball, place it in the target build context. You will most likely have to modify the target Dockerfile to get this to compile, in the case of OpenSSL we must run `./config prefix=/usr` instead of `./Configure` and `make install_sw` intead of `make install`. 
+
+Note that the Dockerfile shows the usage of the template system to select which commands to pass to Docker based on `install_type`. Other variables available to you are `library`, `version`, `build_deps`, `deps`, as well as any independent variable in your test. You can use these variables to splice into commands (for instance the apt-get install used for repository install), or you can use them for additional if statement based control. An example of this would be modifying the commands for compilation for very old versions. 
 
 At build time, xshop copies the tarball into the build context. The default Dockerfile copies this in and then attempts to install it with the default autotools install process. 
 
@@ -147,7 +142,9 @@ Next, to run a test. Here is my folder layout:
 │   ├── attacker
 │   │   └── Dockerfile
 │   └── target
-│       └── Dockerfile
+│       ├── Dockerfile
+│       ├── server.cert5
+│       └── server.key
 ├── docker-compose.yml
 ├── packages
 │   ├── openssl-1.0.1a
@@ -155,27 +152,41 @@ Next, to run a test. Here is my folder layout:
 │   └── openssl-1.0.1g
 │       └── openssl_1.0.1g-1_amd64.deb
 ├── source
-│   ├── openssl-1.0.1f.tar.gz
+│   ├── openssl-1.0.1a.tar.gz
 │   └── openssl-1.0.1g.tar.gz
 └── test
     ├── heartbleed.py
     └── xshop_test.py
 
-9 directories, 10 files
+9 directories, 12 files
 ```
 
-Note that I have Debian packages for versions `1.0.1a` and `1.0.1g`, as well as source for `1.0.1f` and `1.0.1g`. In the repo, I have `1.0.1a` and `1.0.1g`. For Heartbleed, `1.0.1f` was the last vulnerable version. 
+Note that I have Debian packages for versions `1.0.1a` and `1.0.1g`, as well as source for `1.0.1a` and `1.0.1g`. In the repo, I have `1.0.1a` and `1.0.1g`. For Heartbleed, `1.0.1f` was the last vulnerable version. 
+
+I have also pre-generated certificates for the target server to use and placed them in the target build context, in the target Dockerfile I add these files to make them available to the test server:
+
+```
+ADD server.key /home/
+ADD server.cert5 /home/
+```
+
+In the docker-compose.yml file, I change the run command for the target to:
+``` 
+/bin/bash -c 'openssl s_server -key server.key -cert server.cert5 -accept 443 -www'
+```
+
+This starts a basic ssl server in the target container.
 
 Tests should be run from the root of the project directory. To run the test and install from the repository: 
 
 ```
-kevin@localhost:~/projects/Heartbleed$ xshop test remote 1.0.1a
-True
-kevin@localhost:~/projects/Heartbleed$ xshop test remote 1.0.1g
-False
+projects/Heartbleed [ xshop test remote 1.0.1a
+Running Test: {'version': '1.0.1a'},  Vulnerable
+projects/Heartbleed [ xshop test remote 1.0.1g
+Running Test: {'version': '1.0.1g'},  Invulnerable
 ```
 
-Great! The tests confirm other's results with Heartbleed. You might notice that there is very little output. All output, including Docker build output, compilation output, and hook script output is routed to `test.log` in the root of the project folder, which can be monitored with `tail -f`. This is most useful for compilation tests which take some time. In my case, for `1.0.1a`, I find that my script printed out the memory dumped from the vulnerable `1.0.1a` server:
+Great! The tests confirm other's results with Heartbleed. You might notice that there is very little output. All output, including Docker build output, compilation output, and hook script output is routed to `test.log` in the root of the project folder, which can be monitored with `tail -f test.log`. This is most useful for compilation tests which take some time. In my case, for `1.0.1a`, I find that my script printed out the memory dumped from the vulnerable `1.0.1a` server:
 
 ```
 .@....SC[...r....+..H...9...
@@ -196,22 +207,16 @@ No heartbeat response received, server likely not vulnerable
 Tests installing from source and Debians are performed similarly:
 
 ```
-kevin@localhost:~/projects/Heartbleed$ xshop test source 1.0.1f
-True
-kevin@localhost:~/projects/Heartbleed$ xshop test debian 1.0.1a
-True
-```
-
-To experiment with, say, a compiler wrapper or different flags, simply modify the target Dockerfile to install the wrapper or modify the make command to override the flags or compiler variables:
-
-```
-RUN make CFLAG="-O3"
+projects/Heartbleed [ xshop test source 1.0.1a
+Running Test: {'version': '1.0.1a'},  Vulnerable
+projects/Heartbleed [ xshop test debian 1.0.1g
+Running Test: {'version': '1.0.1g'},  Invulnerable
 ```
 
 
 ### API
 
-Another option for running tests is to use the test module API. 
+Another option for running more complivated tests is to use the test module API. 
 
 This exposes two classes, `TestCase` and `Trial`. 
 
@@ -220,43 +225,17 @@ This exposes two classes, `TestCase` and `Trial`.
 `Trial` allows you to define multiple independent variables and run all of those tests, returning the results in a multidimensional array. 
 
 
-Here is an example for Heartbleed, we modify the target Dockerfile to utilize Clang 3.8, allowing us to test some new features. I have gone ahead and generated certs to copy into test containers instead of regenerating them each time. 
+Here is an example for Heartbleed, we modify the target Dockerfile to utilize Clang 3.8, allowing us to test some new features.
 
 
 ```
-FROM xshop:clang38
+-FROM xshop:base_test_image
++FROM xshop:clang38
 
-#
-# Installation
-#
+...
+-RUN make
++RUN make CC=clang CXX=clang++ CFLAG+="{{ cflag }}"
 
-WORKDIR /home/
-
-{% if install_type=="debian" %}
-    ADD {{ library }}-{{ version }} /home/
-    RUN dpkg -i {{ library }}_{{ version }}-1_amd64.deb
-    RUN apt-get -y install -f
-
-{% elif install_type=='source' %}
-    ADD {{ library }}-{{ version }}.tar.gz /home/
-    WORKDIR /home/{{ library }}-{{ version }}/
-    RUN ./config --prefix=/usr
-    RUN make CC=clang CXX=clang++ CFLAG+="{{ cflag }}"
-    RUN make install_sw
-
-{% else %}
-    RUN apt-get -y install {{ library }}={{ version }}-1
-
-{% endif %}
-
-#
-#   Add any configuration for the software
-#
-
-#Add self signed cert
-WORKDIR /home/
-ADD server.key /home/
-ADD server.cert5 /home/
 ```
 
 This presents two variables now to use: `version` and `cflag`. 
@@ -282,6 +261,7 @@ print T.results()
 
 `xshop:clang38` is a default container provided by xshop. (These are locates in `xshop/defaults/contexts`). This pulls the latest version of Clang from the llvm subversion repository, and builds it. This takes a few minutes. To build you can run in a python interpreter:
 
+
 ```
 ~/xshop [ python                           
 Python 2.7.6 (default, Jun 22 2015, 17:58:13) 
@@ -291,8 +271,6 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> dockerw.build_image('clang38')
 >>> 
 ```
-
-
 
 And run the test. I have formated the results for better legibility:
 ```
