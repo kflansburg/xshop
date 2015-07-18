@@ -24,12 +24,7 @@ def run_test(source,version):
 	d = {'version':version}	
 	t = test.TestCase(d,source)
 
-	print colors.colors.BOLD+"Testing: "+colors.colors.ENDC+str(d),
-	if t.run():
-		print colors.colors.FAIL + "Vulnerable"+colors.colors.ENDC
-	else:
-		print colors.colors.OKGREEN + "Invulnerable"+colors.colors.ENDC
-
+	t.run()
 if len(sys.argv)<2:
 	print_general_help()
 elif sys.argv[1] =='new':
