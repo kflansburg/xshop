@@ -271,4 +271,6 @@ class Trial:
 
 	# Builds and tags images for each target container, outputs dockerfiles
 	def build(self):
+		if not os.path.isdir('build'):
+			os.mkdir('build')
 		self.recursive(self.cases,lambda o: o.build())

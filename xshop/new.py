@@ -44,7 +44,6 @@ def new_test_project(library, name):
 	os.mkdir(name+"/containers/target")
 	os.mkdir(name+"/containers/attacker")
 	os.mkdir(name+"/test")
-	os.mkdir(name+"/build")
 	os.mkdir(name+"/source")
 	os.mkdir(name+"/packages")
 	# Copy in default files
