@@ -96,7 +96,7 @@ xshop new openssl Heartbleed
 
 The general format is `xshop new [target library] [project name]`. The project name doesn't matter and is for personal organization. The target library should be what is used to name the source tarballs. 
 
-In the test folder, I place a python script whose main() function performs the attack and returns 2 for success and 0 for failure. In `xshop\_test.py`: 
+In the test folder, I place a python script whose main() function performs the attack and returns 2 for success and 0 for failure. In `xshop_test.py`: 
 
 ```
 import os
@@ -216,7 +216,7 @@ Running Test: {'version': '1.0.1g'},  Invulnerable
 
 ### API
 
-Another option for running more complivated tests is to use the test module API. 
+Another option for running more complicated tests is to use the test module API. 
 
 This exposes two classes, `TestCase` and `Trial`. 
 
