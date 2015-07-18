@@ -142,6 +142,7 @@ def run_privileged(input_image, output_image, command):
 #	function builds the specified image. 
 #
 def build_image(image_name):
+	print "Building Image %s. Because this takes a while, progress will be printed to stdout"%(image_name,)
 	xshop_path =os.path.abspath(os.path.dirname(__file__))
 	context_path = xshop_path+"/defaults/contexts/"+image_name
 
@@ -157,7 +158,9 @@ def build_image(image_name):
 	for line in c.build(path=context_path, rm=True, tag='xshop:'+image_name):
 		d = json.loads(line)
 		if 'stream' in d:		
+			print d['stream']
 			logging.info(d['stream'])
+
 		if 'error' in d:
 			logging.critical(d['error'])
 			raise exceptions.DockerError('Building '+image_name+' failed: '+d['error'])
