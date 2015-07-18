@@ -8,7 +8,7 @@ echo "	wget -qO- https://get.docker.com/ | sh"
 echo "	sudo usermod -aG docker <your_user_name>"
 echo "And then log out and back in."
 echo "Checking: "
-docker info
+sudo -H -u $SUDO_USER bash -c 'docker info'
 echo
 echo "Make sure pip is installed:"
 apt-get -y install python-pip
