@@ -1,5 +1,13 @@
 * Load test variables from config.yml
 * Duplicate host file system for testing in isolation
+	* OverlayFS works quite well, but I'm not sure you can mount a folder as root 
+		with LXC
+	* Docker's standard image creation creates it from a tarball, so you would have
+		to dupe the whole file system to get that. 
+	* It might be possible to craft a container for LXC to run, but I think it will
+		depend on what storage driver it is using, and there is a lot of modification
+		that must be done first to make it work in a container
+
 * Running exploit hook on remote target
 * Move to reading script for running hook
 * Auto fetch and check signature for source files
