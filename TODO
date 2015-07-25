@@ -1,0 +1,5 @@
+* Load test variables from config.yml
+* Duplicate host file system for testing in isolation
+* Running exploit hook on remote target
+* Move to reading script for running hook
+* Auto fetch and check signature for source files
