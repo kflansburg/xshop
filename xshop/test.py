@@ -115,10 +115,18 @@ class TestCase:
 				TMP_FOLDER+"/containers/"+c+"/test")
 			# Write out Dockerfile
 			f=open(TMP_FOLDER+"/containers/"+c+"/Dockerfile",'w')
-			f.write("FROM xshop:%s_build\n"\
-				"ADD test /home/\n"\
-				"WORKDIR /home/\n"%\
-				(c,))
+			dockerfile="FROM xshop:%s_build\n"\
+					"ADD test /home/\n"\
+					"WORKDIR /home/\n"%\
+					(c,)
+
+			# Add independent variables to environment
+			for key in self.d:
+				val = self.d[key]
+				if val and not val=='':
+					dockerfile=dockerfile+"ENV %s %s\n"%(key,self.d[key])
+			
+			f.write(dockerfile)
 			f.close()
 
 		# Copy in compose file
@@ -174,8 +182,11 @@ class TestCase:
 			container = 'xshop_'+c+'_1'
 			result=dockerw.run_hook(container,'run_exploit')	
 			self.results[c]=result
-			if result['ret']==2:
-				self.vuln=True
+			if not result['ret']==0:
+				if result['ret']==2:
+					self.vuln=True
+				else:
+					self.hook_error=True
 
 	# Runs hooks in test environment
 	def run(self):
@@ -185,6 +196,7 @@ class TestCase:
 		self.log=logging.getLogger()
 		self.results = {}
 		self.vuln = False
+		self.hook_error=False
 		try:
 			print colors.colors.BOLD+"Running Test: "+colors.colors.ENDC+str(self.d)+", ",
 			# Build each test image
@@ -207,12 +219,15 @@ class TestCase:
 			logging.info(colors.colors.OKGREEN+"Running Hooks:"+colors.colors.ENDC)
 			self.__call_hooks()
 
-			if self.vuln:
-				print colors.colors.FAIL+"Vulnerable"+colors.colors.ENDC
+					
+			if self.hook_error:
+				raise Exception("Error Running Hooks")
 			else:
-				print colors.colors.OKGREEN+"Invulnerable"+colors.colors.ENDC
-	
-			logging.info(colors.colors.OKGREEN+"Result: "+str(self.vuln)+colors.colors.ENDC)
+				if self.vuln:
+					print colors.colors.FAIL+"Vulnerable"+colors.colors.ENDC
+				else:
+					print colors.colors.OKGREEN+"Invulnerable"+colors.colors.ENDC
+				logging.info(colors.colors.OKGREEN+"Result: "+str(self.vuln)+colors.colors.ENDC)
 		except Exception as e:
 			print colors.colors.BOLD+"ERROR!"+colors.colors.ENDC
 			print e
