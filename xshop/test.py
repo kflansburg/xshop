@@ -66,7 +66,7 @@ class TestCase:
 	# Builds the dockerfile of a container, tagging it as 
 	# xshop:[container]_build
 	def __build_container(self,name, image_name):
-		templated = self.__templated(name)
+		templated = self.__templated(name)	
 
 		# Create temporary build context
 		template.copy_and_template("containers/%s"%(name,), 
@@ -86,10 +86,10 @@ class TestCase:
 					TMP_FOLDER+"/%s-%s"%\
 					(self.library, self.d['version'],))
 
-
-		dockerw.run_docker_command(['docker','build','-t',image_name,TMP_FOLDER])
 		
+		dockerw.run_docker_command(['docker','build','-t',image_name,TMP_FOLDER])
 		shutil.rmtree(TMP_FOLDER)
+		
 
 	# Builds each container from supplied Dockerfile	
 	def __build_containers(self):
@@ -168,7 +168,7 @@ class TestCase:
 		# Remove temporary compose folder
 		os.chdir(self.proj_dir)
 		if os.path.isdir(TMP_FOLDER):
-			shutil.rmtree(TMP_FOLDER)
+			shutil.rmtree(TMP_FOLDER)	
 	
 		# Terminate Test Containers
 		dockerw.compose_down()

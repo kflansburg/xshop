@@ -1,0 +1,5 @@
+target:
+  build: containers/target/
+  environment:
+    CONTAINER_NAME: target
+  command: /bin/bash -c "while true; do sleep .1; done"
