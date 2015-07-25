@@ -61,3 +61,11 @@ docs/_build/
 
 # PyBuilder
 target/
+
+
+# xshop stuff
+*.log
+*.deb
+*.tar.gz
+
+
