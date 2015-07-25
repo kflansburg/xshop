@@ -11,23 +11,27 @@
 #
 
 import jinja2
-templateLoader = jinja2.FileSystemLoader( searchpath="." )
-templateEnv = jinja2.Environment( loader=templateLoader )
 import os
 import shutil
 import re
 
+def get_env():
+	templateLoader = jinja2.FileSystemLoader( searchpath="." )
+	templateEnv = jinja2.Environment( loader=templateLoader )
+	return templateEnv
+
 OMIT = '[\s\S]+(.deb$|.tar.gz$|.swp$|.changes$|.dsc$|.tar.xz$|.tar.bz2$)'
 
 def template_file_contents(path,d):
-	template = templateEnv.get_template( path )
+	e = get_env()
+	template = e.get_template( path )
 	return template.render( d )
 
 #
 #	Replaces substitutions within a file. Destructive
 #
 def template_file(path,d):
-	template = templateEnv.get_template( path )
+	template = env.get_template( path )
 	output = template.render( d )
 	os.remove(path)
 	f = open(path,'w')
@@ -53,6 +57,8 @@ def template_folder(path,d):
 #	`output`, and then applies templating in place.
 #
 def copy_and_template(path,output,d):
+	global env
+	env = get_env()	
 	if os.path.isdir(path):
 		# Folder
 		shutil.copytree(path,output)
