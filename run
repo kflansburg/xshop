@@ -57,18 +57,26 @@ elif sys.argv[1] =='test':
 	parser.add_option("-f","--force", action="store_true", dest="force", help="Force rebuild of any source files.", default=False)
 	(options,args) = parser.parse_args(sys.argv[2:])
 	if len(args)==0:
-		parser.print_help()
-		print "Please specify a installation source [source|remote|debian]"
+		c = config.Config()
+		install_type = c.get('install_type')
+		variables = c.get('variables')
+		if install_type and isinstance(variables,dict) and len(variables.keys())>0:
+			T = test.Trial(variables,install_type)
+			T.run()
+			f = open('output.log','w')
+			f.write(str(T.results()))
+			f.close()		
 	elif len(args)>=2:
 		source = args[0]
 		versions = args[1:]
 	
-	if not source in ['remote','debian','source']:
-		parser.print_help()
-		print "Source '"+source+"' not recognized."
-	else:
-		for version in versions:
-			run_test(source,version)
+		if not source in ['remote','debian','source']:
+			parser.print_help()
+			print "Source '"+source+"' not recognized."
+		else:
+			for version in versions:
+				run_test(source,version)
+
 elif sys.argv[1]=='build':
 	versions = source_versions()
 	print "Building Versions:"

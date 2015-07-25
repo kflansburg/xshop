@@ -1,3 +1,8 @@
 build-dependencies: []
 dependencies: []
 library: openssl
+install_type: debian
+variables:
+  version:
+    - 1.0.1a
+    - 1.0.1g
