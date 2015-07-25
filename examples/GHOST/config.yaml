@@ -1,0 +1,3 @@
+build-dependencies: [gawk,autoconf]
+dependencies: []
+library: glibc
