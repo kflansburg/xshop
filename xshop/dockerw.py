@@ -114,6 +114,7 @@ def compose_down():
 #	results
 #
 def run_hook(container,hook):
+	container = "xshop_"+container+"_1"
 	if not container_running(container):
 		raise exceptions.DockerError('Container '+container+' not running, cannot run hook')
 	

@@ -26,9 +26,27 @@ from xshop import template
 from xshop import dockerw
 from xshop import config
 import shutil
+import sys
 import os
 
+
+
 TMP_FOLDER='test-tmp'
+
+class HookRunner:
+	def __init__(self,results):
+		self.error=False
+		self.vuln=False
+		self.results = results
+	def run(self,container,hook):
+		result = dockerw.run_hook(container,hook)
+		self.results.append(result)
+		ret = result['ret']
+		if not ret==0:
+			if ret==2:
+				self.vuln=True
+			else:
+				self.error=True
 
 class TestCase:
 	def __init__(self,d,source):
@@ -45,7 +63,7 @@ class TestCase:
 
 		# Initialize Result Values
 		self.vuln=None
-		self.results={}	
+		self.results=[]
 
 	# Builds template dict by adding non independent variables
 	def __templated(self,name):
@@ -194,7 +212,7 @@ class TestCase:
 			shutil.rmtree('test-tmp')
 		logging.basicConfig(filename='test.log',level=logging.DEBUG)	
 		self.log=logging.getLogger()
-		self.results = {}
+		self.results = []
 		self.vuln = False
 		self.hook_error=False
 		try:
@@ -216,8 +234,19 @@ class TestCase:
 			dockerw.compose_up()
 
 			# Call hook
+
 			logging.info(colors.colors.OKGREEN+"Running Hooks:"+colors.colors.ENDC)
-			self.__call_hooks()
+			sys.path.append(self.proj_dir+"/test")
+			import xshop_test
+			H = HookRunner(self.results)
+			xshop_test.run(H)
+			if H.error:
+				self.hook_error=True
+			else:
+				if H.vuln:
+					self.vuln=True	
+
+#			self.__call_hooks()
 
 					
 			if self.hook_error:
