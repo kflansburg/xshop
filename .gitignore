@@ -64,8 +64,8 @@ target/
 
 
 # xshop stuff
-*.log
-*.deb
-*.tar.gz
+examples/*/source/*
+examples/*/*.log
+examples/*/packages/*
 
 
