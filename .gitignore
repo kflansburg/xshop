@@ -64,8 +64,8 @@ target/
 
 
 # xshop stuff
-examples/*/source/*
+examples/*/source
 examples/*/*.log
-examples/*/packages/*
+examples/*/packages
 
 

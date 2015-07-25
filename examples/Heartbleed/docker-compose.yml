@@ -1,0 +1,12 @@
+attacker:
+  build: containers/attacker/
+  links:
+    - target 
+  command: /bin/bash -c "while true; do sleep .1; done"
+  environment:
+    CONTAINER_NAME: attacker
+target:
+  build: containers/target/
+  environment:
+    CONTAINER_NAME: target
+  command: /bin/bash -c 'openssl s_server -key server.key -cert server.cert5 -accept 443 -www'
