@@ -3,3 +3,4 @@
 * Running exploit hook on remote target
 * Move to reading script for running hook
 * Auto fetch and check signature for source files
+* Pick docker names to allow concurent tests
