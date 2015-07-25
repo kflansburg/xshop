@@ -59,13 +59,10 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
-# PyBuilder
-target/
 
 
 # xshop stuff
 examples/*/source
-examples/*/*.log
 examples/*/packages
 
 
