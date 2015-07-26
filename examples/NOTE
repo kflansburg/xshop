@@ -1,0 +1,21 @@
+Some exploits to test
+
+Buffer-overflow
+
+  These are blocked by CFI flag, and sometimes by ASAN (address sanitizer)
+
+  NTP BufferOverflow
+  https://www.exploit-db.com/exploits/35732/
+  12.04.5, ntpdc 4.2.6p3
+
+  VFU 4.10-1.1 BOF
+  https://www.exploit-db.com/exploits/35450/
+  On debian Wheezy
+
+  mCrypt 2.5.8 BOF
+  https://www.exploit-db.com/exploits/22928/
+  On Arch 3.6.6-1
+
+
+
+
