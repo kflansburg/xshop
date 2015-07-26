@@ -9,3 +9,4 @@
 
 * Running exploit hook on remote target
 * Auto fetch and check signature for source files
+* xshop attach version=1.0.1a target
