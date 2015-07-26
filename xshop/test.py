@@ -1,7 +1,7 @@
 #
 #	Test
 #
-#		This module defines 2 classes:
+#		This module defines 3 classes:
 #
 #		TestCase(dict_of_var_vals,{source|debian|remote}) 
 #			- Models a single test with fixed variables
@@ -16,10 +16,16 @@
 #
 #			Trial.results() - Returns multidimensional array of test results
 #
+#		HookRunner([]* results)
+#			- Passed to user for running hooks in test environment, 
+#				collects results to be returned to xshop
 #
 
+import string
+import random
 import copy
 import logging
+import yaml
 from xshop import colors
 from xshop import exceptions
 from xshop import template
@@ -29,17 +35,21 @@ import shutil
 import sys
 import os
 
-
+# Returns a random 10 character uppercase string for naming
+# containers
+def random_name():
+	return ''.join(random.choice(string.ascii_lowercase) for i in range(10))
 
 TMP_FOLDER='test-tmp'
 
 class HookRunner:
-	def __init__(self,results):
+	def __init__(self,results,containers):
 		self.error=False
 		self.vuln=False
 		self.results = results
+		self.containers = containers
 	def run(self,container,hook):
-		result = dockerw.run_hook(container,hook)
+		result = dockerw.run_hook(self.containers[container],hook)
 		self.results.append(result)
 		ret = result['ret']
 		if not ret==0:
@@ -54,8 +64,12 @@ class TestCase:
 		self.config = config.Config()
 		self.proj_dir = os.getcwd()
 		self.compose = config.parse_docker_compose()
-		self.containers = [c for c in self.compose]
 		self.library=self.config.get('library')
+
+		# Build Dictionary of Containers and Their Random Names
+		self.containers = {}
+		for c in self.compose:
+			self.containers[c]=random_name()
 		
 		# Get Test Case Variables
 		self.source = source
@@ -84,6 +98,9 @@ class TestCase:
 	# Builds the dockerfile of a container, tagging it as 
 	# xshop:[container]_build
 	def __build_container(self,name, image_name):
+		global TMP_FOLDER
+		TMP_FOLDER = random_name()
+	
 		templated = self.__templated(name)	
 
 		# Create temporary build context
@@ -111,21 +128,24 @@ class TestCase:
 
 	# Builds each container from supplied Dockerfile	
 	def __build_containers(self):
-		for c in self.containers:
+		for c,v in self.containers.iteritems():
 			logging.info(colors.colors.OKGREEN\
 				+"Building %s"%(c,)\
 				+colors.colors.ENDC)
-			self.__build_container(c,"xshop:%s_build"%(c,))
+			self.__build_container(c,"xshop:%s_build"%(v,))
 			logging.info(colors.colors.OKGREEN\
 				+"Done."\
 				+colors.colors.ENDC)
 
 	# Creates temporary context to launch experiment with docker compose
 	def __create_compose_context(self):
+		global TMP_FOLDER
+		TMP_FOLDER=random_name()
+
 		os.mkdir(TMP_FOLDER)
 		os.mkdir(TMP_FOLDER+"/containers")
 		# For each container
-		for c in self.containers:
+		for c,v in self.containers.iteritems():
 			# Create Context Folder
 			os.mkdir(TMP_FOLDER+"/containers/"+c)
 			# Copy in test code
@@ -136,7 +156,7 @@ class TestCase:
 			dockerfile="FROM xshop:%s_build\n"\
 					"ADD test /home/\n"\
 					"WORKDIR /home/\n"%\
-					(c,)
+					(v,)
 
 			# Add independent variables to environment
 			for key in self.d:
@@ -147,9 +167,27 @@ class TestCase:
 			f.write(dockerfile)
 			f.close()
 
-		# Copy in compose file
-		shutil.copy2(self.proj_dir+'/docker-compose.yml',
-			TMP_FOLDER+'/docker-compose.yml')
+		# Copy in compose, substituting container pseudonyms
+		f = open(self.proj_dir+"/docker-compose.yml",'r')
+		d = yaml.load(f.read())
+		f.close()
+		
+		newd={}	
+	
+		for c in d:
+			newc = self.containers[c]
+			if 'links' in d[c].keys():
+				newlinks=[]
+				for l in d[c]['links']:
+					newlinks.append("%s:%s"%(self.containers[l],l,))
+				d[c]['links']=newlinks
+			newd[newc]=d[c]
+					
+	
+		f = open(TMP_FOLDER+'/docker-compose.yml','w')
+		f.write(yaml.dump(newd))
+		f.close()
+
 
 	# Cleans up logging
 	def __end_logging(self):
@@ -162,8 +200,6 @@ class TestCase:
 	# Outputs dockerfile to build/ as Dockerfile_[sorted_var_vals]
 	# 
 	def build(self):
-		if os.path.isdir('test-tmp'):
-			shutil.rmtree('test-tmp')
 
 		logging.basicConfig(filename='build.log',level=logging.DEBUG)	
 		self.log=logging.getLogger()
@@ -183,13 +219,14 @@ class TestCase:
 
 	# Removes temporary test resources
 	def __clean_test(self):
-		# Remove temporary compose folder
-		os.chdir(self.proj_dir)
-		if os.path.isdir(TMP_FOLDER):
-			shutil.rmtree(TMP_FOLDER)	
-	
 		# Terminate Test Containers
 		dockerw.compose_down()
+
+		# Remove temporary compose folder
+		os.chdir(self.proj_dir)
+#		if os.path.isdir(TMP_FOLDER):
+#			shutil.rmtree(TMP_FOLDER)	
+	
 		
 		self.__end_logging()
 
@@ -208,8 +245,6 @@ class TestCase:
 
 	# Runs hooks in test environment
 	def run(self):
-		if os.path.isdir('test-tmp'):
-			shutil.rmtree('test-tmp')
 		logging.basicConfig(filename='test.log',level=logging.DEBUG)	
 		self.log=logging.getLogger()
 		self.results = []
@@ -238,16 +273,13 @@ class TestCase:
 			logging.info(colors.colors.OKGREEN+"Running Hooks:"+colors.colors.ENDC)
 			sys.path.append(self.proj_dir+"/test")
 			import xshop_test
-			H = HookRunner(self.results)
+			H = HookRunner(self.results,self.containers)
 			xshop_test.run(H)
 			if H.error:
 				self.hook_error=True
 			else:
 				if H.vuln:
 					self.vuln=True	
-
-#			self.__call_hooks()
-
 					
 			if self.hook_error:
 				raise Exception("Error Running Hooks")
@@ -257,10 +289,10 @@ class TestCase:
 				else:
 					print colors.colors.OKGREEN+"Invulnerable"+colors.colors.ENDC
 				logging.info(colors.colors.OKGREEN+"Result: "+str(self.vuln)+colors.colors.ENDC)
-		except Exception as e:
-			print colors.colors.BOLD+"ERROR!"+colors.colors.ENDC
-			print e
-			self.vuln = None
+#		except Exception as e:
+#			print colors.colors.BOLD+"ERROR!"+colors.colors.ENDC
+#			print e
+#			self.vuln = None
 
 		finally:
 			logging.info(colors.colors.OKGREEN+"Cleaning Up."+colors.colors.ENDC)

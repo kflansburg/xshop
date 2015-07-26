@@ -103,7 +103,7 @@ def compose_up():
 def compose_down():
 	# Get list of project containers
 	containers = [c for c in config.parse_docker_compose()]
-	
+
 	# Kill each one. Docker-compose kill can be ineffective
 	containers = map(lambda c: "xshop_"+c+"_1", containers)
 	for c in containers:

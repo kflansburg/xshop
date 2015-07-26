@@ -1,4 +1,3 @@
-* Load test variables from config.yml
 * Duplicate host file system for testing in isolation
 	* OverlayFS works quite well, but I'm not sure you can mount a folder as root 
 		with LXC
@@ -10,4 +9,3 @@
 
 * Running exploit hook on remote target
 * Auto fetch and check signature for source files
-* Pick docker names to allow concurent tests
