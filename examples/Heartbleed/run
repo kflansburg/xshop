@@ -5,8 +5,10 @@ from xshop import test
 variables = {'version':['1.0.1a','1.0.1g']}
 source = 'debian'
 
-T = test.Trial(variables,source)
 
-T.run()
+T = test.TestCase({'version':'1.0.1a'},'debian')
 
-print T.results()
+
+
+T.attach('target')
+

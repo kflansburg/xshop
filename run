@@ -85,6 +85,17 @@ elif sys.argv[1]=='build':
 	T.build()
 elif sys.argv[1]=='build_image':
 	dockerw.build_image(sys.argv[2])
+
+elif sys.argv[1]=='attach':
+	c = sys.argv[-1]
+	source = sys.argv[2]
+	var = sys.argv[3:-1]
+	variables = {}
+	for v in var:
+		v = v.split('=')
+		variables[v[0]]=v[1]
+	T = test.TestCase(variables,source)
+	T.attach(c)
 else:
 	print_general_help()
 	print "Command '"+sys.argv[1]+"' not recognized."

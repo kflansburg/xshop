@@ -224,24 +224,46 @@ class TestCase:
 
 		# Remove temporary compose folder
 		os.chdir(self.proj_dir)
-#		if os.path.isdir(TMP_FOLDER):
-#			shutil.rmtree(TMP_FOLDER)	
+		if os.path.isdir(TMP_FOLDER):
+			shutil.rmtree(TMP_FOLDER)	
 	
 		
-		self.__end_logging()
 
 	# Call exploit hook in each container and stores results	
 	def __call_hooks(self):
-		for c in self.containers:
-			logging.info(colors.colors.OKGREEN+"\t"+c+colors.colors.ENDC)
-			container = 'xshop_'+c+'_1'
-			result=dockerw.run_hook(container,'run_exploit')	
-			self.results[c]=result
-			if not result['ret']==0:
-				if result['ret']==2:
-					self.vuln=True
-				else:
-					self.hook_error=True
+		sys.path.append(self.proj_dir+"/test")
+		import xshop_test
+		H = HookRunner(self.results,self.containers)
+		xshop_test.run(H)
+		if H.error:
+			self.hook_error=True
+		else:
+			if H.vuln:
+				self.vuln=True	
+
+	def __launch_test(self):
+		# Build each test image
+		self.__build_containers()
+
+		# Create Compose Context
+		logging.info(colors.colors.OKGREEN\
+			+"Constructing Compose Context."\
+			+colors.colors.ENDC)
+		self.__create_compose_context()
+		os.chdir(TMP_FOLDER)
+
+		# Launch Test
+		logging.info(colors.colors.OKGREEN\
+			+"Running Docker Compose Up"\
+			+colors.colors.ENDC)
+		dockerw.compose_up()
+
+	def attach(self,container):	
+		self.__launch_test()
+		from subprocess import call as sh
+		container_name = 'xshop_'+self.containers[container]+'_1'
+		sh(['docker','exec','-i','-t',container_name,'/bin/bash'])
+		self.__clean_test()
 
 	# Runs hooks in test environment
 	def run(self):
@@ -252,35 +274,11 @@ class TestCase:
 		self.hook_error=False
 		try:
 			print colors.colors.BOLD+"Running Test: "+colors.colors.ENDC+str(self.d)+", ",
-			# Build each test image
-			self.__build_containers()
-
-			# Create Compose Context
-			logging.info(colors.colors.OKGREEN\
-				+"Constructing Compose Context."\
-				+colors.colors.ENDC)
-			self.__create_compose_context()
-			os.chdir(TMP_FOLDER)
-
-			# Launch Test
-			logging.info(colors.colors.OKGREEN\
-				+"Running Docker Compose Up"\
-				+colors.colors.ENDC)
-			dockerw.compose_up()
+			self.__launch_test()
 
 			# Call hook
-
 			logging.info(colors.colors.OKGREEN+"Running Hooks:"+colors.colors.ENDC)
-			sys.path.append(self.proj_dir+"/test")
-			import xshop_test
-			H = HookRunner(self.results,self.containers)
-			xshop_test.run(H)
-			if H.error:
-				self.hook_error=True
-			else:
-				if H.vuln:
-					self.vuln=True	
-					
+			self.__call_hooks()					
 			if self.hook_error:
 				raise Exception("Error Running Hooks")
 			else:
@@ -289,14 +287,15 @@ class TestCase:
 				else:
 					print colors.colors.OKGREEN+"Invulnerable"+colors.colors.ENDC
 				logging.info(colors.colors.OKGREEN+"Result: "+str(self.vuln)+colors.colors.ENDC)
-#		except Exception as e:
-#			print colors.colors.BOLD+"ERROR!"+colors.colors.ENDC
-#			print e
-#			self.vuln = None
+		except Exception as e:
+			print colors.colors.BOLD+"ERROR!"+colors.colors.ENDC
+			print e
+			self.vuln = None
 
 		finally:
 			logging.info(colors.colors.OKGREEN+"Cleaning Up."+colors.colors.ENDC)
 			self.__clean_test()
+			self.__end_logging()
 
 		return self.vuln
 
