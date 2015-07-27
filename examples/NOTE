@@ -8,6 +8,13 @@ Buffer-overflow
   https://www.exploit-db.com/exploits/35732/
   12.04.5, ntpdc 4.2.6p3
 
+	I have NTPD 4.2.6p3 compiling on an ubuntu 12 image. 
+	I am not sure there are modent kernel features preventing the attack.
+	The exploit says it can take up to two hours, and I'm not sure how it behaves
+		when it fails, I'm letting it run on both new and old versions to see. 
+	It may not be possible to detect a failure/do with the current host kernel
+	Even so, I will compile with CFI/asan and see if they complain about the exploit. 
+
   VFU 4.10-1.1 BOF
   https://www.exploit-db.com/exploits/35450/
   On debian Wheezy

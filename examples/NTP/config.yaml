@@ -1,0 +1,8 @@
+build-dependencies: []
+dependencies: []
+library: ntp
+install_type: source
+variables:
+  version:
+    - 4.2.6p3
+    - 4.2.6p4
