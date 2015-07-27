@@ -1,0 +1,3 @@
+build-dependencies: []
+dependencies: [libpcre3,bzip2,unzip]
+library: vfu

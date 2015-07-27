@@ -19,10 +19,17 @@ Buffer-overflow
   https://www.exploit-db.com/exploits/35450/
   On debian Wheezy
 
+	There were a number of typos in the exploit file
+	I think the shellcode is inteded to simply open bash, but 
+		it seems like it just does some really strange things with 
+		the colors and drops back to the original shell. 
+	"File name too long" is printed by vfu so maybe it was caught?
+		I dont think the package has been patched since this was published
+
+
   mCrypt 2.5.8 BOF
   https://www.exploit-db.com/exploits/22928/
   On Arch 3.6.6-1
 
-
-
-
+	Signal 11 caught for all versions when opening payload file. 
+	Compiling with -fno-stack-protector
