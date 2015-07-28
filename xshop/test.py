@@ -59,8 +59,9 @@ class HookRunner:
 				self.error=True
 
 class TestCase:
-	def __init__(self,d,source):
+	def __init__(self,d,source,target='strawman'):
 		# Get Project Configuration
+		self.target=target
 		self.config = config.Config()
 		self.proj_dir = os.getcwd()
 		self.compose = config.parse_docker_compose()
@@ -100,30 +101,43 @@ class TestCase:
 	def __build_container(self,name, image_name):
 		global TMP_FOLDER
 		TMP_FOLDER = random_name()
-	
-		templated = self.__templated(name)	
 
-		# Create temporary build context
-		template.copy_and_template("containers/%s"%(name,), 
-			TMP_FOLDER,
-			templated)
+		if name=='target' and self.target=='host':
+			# Build Host Image
+			if not dockerw.image_exists('xshop:host'):
+				raise exceptions.DockerError('Please use `xshop build_image host` to construct an image of the host machine. This should be done any time changes are made to the host system.')
 
-		# Copy in any necessary files
-		if name=='target':
-			if self.source=='source':
-				source_file = "%s/source/%s-%s.tar.gz"%\
-					(self.proj_dir, self.library, self.d['version'])
-				shutil.copy2(source_file, TMP_FOLDER+"/")
-			elif self.source=='debian':
-				pkg_dir = "%s/packages/%s-%s/"%\
-					(self.proj_dir, self.library, self.d['version'])
-				shutil.copytree(pkg_dir, 
-					TMP_FOLDER+"/%s-%s"%\
-					(self.library, self.d['version'],))
+
+
+		elif name=='target' and self.target=='remote':
+			pass
+			# Nothing, already running
+
+		else:
+			# Construct image for container from supplied context	
+			templated = self.__templated(name)	
+
+			# Create temporary build context
+			template.copy_and_template("containers/%s"%(name,), 
+				TMP_FOLDER,
+				templated)
+
+			# Copy in any necessary files
+			if name=='target':
+				if self.source=='source':
+					source_file = "%s/source/%s-%s.tar.gz"%\
+						(self.proj_dir, self.library, self.d['version'])
+					shutil.copy2(source_file, TMP_FOLDER+"/")
+				elif self.source=='debian':
+					pkg_dir = "%s/packages/%s-%s/"%\
+						(self.proj_dir, self.library, self.d['version'])
+					shutil.copytree(pkg_dir, 
+						TMP_FOLDER+"/%s-%s"%\
+						(self.library, self.d['version'],))
 
 		
-		dockerw.run_docker_command(['docker','build','-t',image_name,TMP_FOLDER])
-		shutil.rmtree(TMP_FOLDER)
+			dockerw.run_docker_command(['docker','build','-t',image_name,TMP_FOLDER])
+			shutil.rmtree(TMP_FOLDER)
 		
 
 	# Builds each container from supplied Dockerfile	
@@ -153,10 +167,19 @@ class TestCase:
 				TMP_FOLDER+"/containers/"+c+"/test")
 			# Write out Dockerfile
 			f=open(TMP_FOLDER+"/containers/"+c+"/Dockerfile",'w')
-			dockerfile="FROM xshop:%s_build\n"\
-					"ADD test /home/\n"\
-					"WORKDIR /home/\n"%\
-					(v,)
+
+			if c=='target' and self.target=='remote':
+				# Configure network route to target
+				pass
+			elif c=='target' and self.target=='host':
+				# FROM xshop:host
+				dockerfile="FROM xshop:host\n"
+			else:
+				dockerfile="FROM xshop:%s_build\n"%(v,)
+
+
+			dockerfile+="ADD test /home/\n"\
+						"WORKDIR /home/\n"
 
 			# Add independent variables to environment
 			for key in self.d:

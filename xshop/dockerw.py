@@ -138,11 +138,38 @@ def run_privileged(input_image, output_image, command):
 	run_docker_command(['docker','commit','xshop_privileged_run', output_image])
 
 #
+#	Tars the host file system, and creates a new Docker image
+#		from it for testing. It would be nice if this could 
+#		use OverlayFS, but I'm not usre that is possible.  
+#
+def build_host_image():
+	print "Building Host Image. Because this takes a while, progress will be printed to stdout"
+	try:
+		print "ARCHIVING FILE SYSTEM"
+		sh('tar --numeric-owner --exclude=/usr/src --exclude=/lib/modules --exclude=/proc --exclude=/sys --exclude=/home --exclude=/var/lib/docker -cvf host-base.tar /',shell=True)
+
+		print "RUNNING DOCKER IMPORT"
+		sh('cat host-base.tar | docker import - xshop:host',shell=True)
+
+	#	sh(['tar','--numeric-owner',
+#			'--exclude=/proc',
+#			'--exclude=/sys',
+#			'--exclude=/home',
+#			'--exclude=/var/lib/docker',
+#			'-cvf','host-base.tar','/'],shell=True)
+#		sh(['cat','host-base.tar','|','docker','import','-','xshop:host'],shell=True)
+	finally:
+		print "DONE!"
+#		os.remove('host-base.tar')
+
+#
 #	Build contexts for some default images to be used are 
 # 	stored in xshop/defaults/contexts/<image_name>. This
 #	function builds the specified image. 
 #
 def build_image(image_name):
+	if image_name=='host':
+		return build_host_image()
 	print "Building Image %s. Because this takes a while, progress will be printed to stdout"%(image_name,)
 	xshop_path =os.path.abspath(os.path.dirname(__file__))
 	context_path = xshop_path+"/defaults/contexts/"+image_name
@@ -165,3 +192,6 @@ def build_image(image_name):
 		if 'error' in d:
 			logging.critical(d['error'])
 			raise exceptions.DockerError('Building '+image_name+' failed: '+d['error'])
+
+
+
