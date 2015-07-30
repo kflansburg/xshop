@@ -1,8 +1,5 @@
-FROM debian:wheezy
-RUN apt-get update
-RUN apt-get -y install gcc
-RUN apt-get -y install make
-RUN apt-get -y install python
+FROM xshop:base_test_image
+
 
 #
 # Installation
@@ -23,21 +20,19 @@ WORKDIR /home/
     RUN apt-get -y install -f
 
 {% elif install_type=="source" %}
+	{% for d in builddeps %}
+		RUN apt-get -y install {{ d }}
+	{% endfor %}
+
 	ADD {{ library }}-{{ version }}.tar.gz /home/
 	WORKDIR /home/{{ library }}-{{ version }}
-    RUN ./configure --prefix=/usr
-    RUN make
-    RUN make install
+#    RUN make CC=clang CXX=clang++ CFLAGS=-fsanitize=cfi,-flto 
+#    RUN ./install
 
 {% else %}
     RUN apt-get -y install {{ library }}={{ version }}-1.1
 
 {% endif %}
-
-RUN apt-get -y install vim
-RUN useradd -ms /bin/bash username
-USER username
-
 
 #
 #   Add any configuration for the software

@@ -9,11 +9,12 @@ Buffer-overflow
   12.04.5, ntpdc 4.2.6p3
 
 	I have NTPD 4.2.6p3 compiling on an ubuntu 12 image. 
-	I am not sure there are modent kernel features preventing the attack.
+	I am not sure there are modern kernel features preventing the attack.
 	The exploit says it can take up to two hours, and I'm not sure how it behaves
 		when it fails, I'm letting it run on both new and old versions to see. 
-	It may not be possible to detect a failure/do with the current host kernel
-	Even so, I will compile with CFI/asan and see if they complain about the exploit. 
+	Those runs did not seem to terminate, I have modified the code to print it's
+	progress, we will see how it works. I think that it should be possible to 
+	eventually return whether the exploit ran. 
 
   VFU 4.10-1.1 BOF
   https://www.exploit-db.com/exploits/35450/
@@ -23,8 +24,8 @@ Buffer-overflow
 	I think the shellcode is inteded to simply open bash, but 
 		it seems like it just does some really strange things with 
 		the colors and drops back to the original shell. 
-	"File name too long" is printed by vfu so maybe it was caught?
-		I dont think the package has been patched since this was published
+	I think that it is working, tries to open a shell, and segfaults.
+	I have tried with -fno-stack-protector 
 
 
   mCrypt 2.5.8 BOF

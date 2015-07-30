@@ -21,14 +21,17 @@ WORKDIR /home/
 	ADD {{ library }}-{{ version }}.tar.gz /home/
 	WORKDIR /home/{{ library }}-{{ version }}
     RUN ./configure --prefix=/usr
-    RUN make
+    RUN make 
     RUN make install
 
 {% else %}
     RUN apt-get -y install {{ library }}={{ version }}-1
 
 {% endif %}
-
+RUN apt-get -y install gdb git
+RUN git clone https://github.com/longld/peda.git ~/peda
+RUN echo "source ~/peda/peda.py" >> ~/.gdbinit
+RUN echo "DONE! debug your program with gdb and enjoy"
 #
 #   Add any configuration for the software
 #
