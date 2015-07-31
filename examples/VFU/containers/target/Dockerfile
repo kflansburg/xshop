@@ -1,4 +1,8 @@
-FROM xshop:base_test_image
+FROM debian:wheezy
+RUN apt-get update
+RUN apt-get -y install python
+RUN apt-get -y install gcc 
+RUN apt-get -y install make
 
 
 #
@@ -26,8 +30,8 @@ WORKDIR /home/
 
 	ADD {{ library }}-{{ version }}.tar.gz /home/
 	WORKDIR /home/{{ library }}-{{ version }}
-#    RUN make CC=clang CXX=clang++ CFLAGS=-fsanitize=cfi,-flto 
-#    RUN ./install
+	RUN make 
+	RUN ./install
 
 {% else %}
     RUN apt-get -y install {{ library }}={{ version }}-1.1

@@ -1,3 +1,7 @@
 build-dependencies: [g++,libpcre3,libpcre3-dev,libncurses5-dev]
-dependencies: [libpcre3,bzip2,unzip]
+dependencies: []
 library: vfu
+install_type: source
+variables:
+  version:
+    - "4.10"

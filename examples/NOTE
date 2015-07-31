@@ -1,4 +1,23 @@
-Some exploits to test
+libtiff <3.9
+http://bugzilla.maptools.org/show_bug.cgi?id=2300
+
+Download Source (must tar name to libtiff): 
+	ftp://ftp.remotesensing.org/pub/libtiff/
+
+	I have constructed an image with the BITSPERSAMPLE field changed to 1. 
+
+	I can get a segfault when I specifically query the field, but opening the
+		image is fine. I think that a strip of data has to be crafted as well. 
+
+	The library reports:
+		Good Image:
+			Strip Size: 	5880
+			Read Strips:	175
+		Bad Image:
+			Strip Size:		8096
+			Read Strips:	16
+
+	So it is definitely calculating different buffers. 
 
 Buffer-overflow
 
@@ -8,29 +27,80 @@ Buffer-overflow
   https://www.exploit-db.com/exploits/35732/
   12.04.5, ntpdc 4.2.6p3
 
-	I have NTPD 4.2.6p3 compiling on an ubuntu 12 image. 
-	I am not sure there are modern kernel features preventing the attack.
-	The exploit says it can take up to two hours, and I'm not sure how it behaves
-		when it fails, I'm letting it run on both new and old versions to see. 
-	Those runs did not seem to terminate, I have modified the code to print it's
-	progress, we will see how it works. I think that it should be possible to 
-	eventually return whether the exploit ran. 
+	I have NTPD 4.2.6p3 compiling on an ubuntu 12 image.
+
+	The tarballs that I have been testing are here:
+		http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/
+
+	I have used 4.2.6p3 and 4.2.6p1
+ 
+	The test environment also installs gdb/peda ( mentioned in the writeup)
+
+	I ran the full exploit script (took about 30 hours, no luck). 
+
+	To run, monitor test.log and then run `xshop test`
+
+	The exploit prints a lot to standard out, and sending that through 
+		the docker daemon is kinda slow, so the output might freeze up a bit.	
+
+	Writeup: https://hatriot.github.io/blog/2015/01/06/ntpdc-exploit/
+
+	I noticed from the writeup that the author can get a segfault from just
+	
+		python -c 'print "A"*600' | ntpdc
+
+	I get no such segfault. 
+
+	I also compared the paxtest/checksec from the author's article. 
+
+	The only difference is that the paxtest shows "killed" for the things
+		the author mentions, and vulnerable for him. 
+
+	Finally, I downloaded an original debian 7 live cd to run in virtual box, 
+	rerunning the tests, the paxtest is now "vulnerable", and many of the other
+	tests show more vulnerability (makes sense, its very old and not patched). 
+
+	I still cant get the segfault that the author indicates on the live cd, but
+		I did get some experience working with vagrant, so that will definitely 
+		be a possible feature in the future for testing kernel vuln.
+
+	So the good news is that I dont think it is failing because we are using a 
+		container, but I have no idea what is causing it to fail. I've double
+		checked the version number, but I havent found the vulnerable funciton 
+		in ntpdc to verify that it isnt doing bounds checks. 
 
   VFU 4.10-1.1 BOF
   https://www.exploit-db.com/exploits/35450/
   On debian Wheezy
+	
+	Source Here:
+		http://cade.datamax.bg/vfu/previous_releases/
+
 
 	There were a number of typos in the exploit file
-	I think the shellcode is inteded to simply open bash, but 
-		it seems like it just does some really strange things with 
-		the colors and drops back to the original shell. 
-	I think that it is working, tries to open a shell, and segfaults.
-	I have tried with -fno-stack-protector 
+	
+	It is probably better to run the exploit while attached.
 
+	It seems to do something, but I'm not experienced with spawning a new shell. 
+		Whatever it does, I think it fails, when you type exit, you drop out of the
+		container, so you are definitely just at the original shell. 
+
+	The command does exit 11, so possibly just the payload is not lined up?
+		I have not explored that much yet.  
+
+	The VFU makefile sucks and its hard to override cflags
 
   mCrypt 2.5.8 BOF
   https://www.exploit-db.com/exploits/22928/
   On Arch 3.6.6-1
 
+	Source Here:
+		ftp://mcrypt.hellug.gr/pub/crypto/mcrypt/attic/old/
+
+	In CVE-2012-4409 
+
+	Test in Wheezy
+
 	Signal 11 caught for all versions when opening payload file. 
-	Compiling with -fno-stack-protector
+
+	The author mentions tweaking for different systems, but I'm not sure what	
