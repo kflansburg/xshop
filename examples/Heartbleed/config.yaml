@@ -1,8 +1,14 @@
 build-dependencies: []
 dependencies: []
 library: openssl
-install_type: debian
+install_type: source
 variables:
   version:
     - 1.0.1a
     - 1.0.1g
+source:
+  - "https://www.openssl.org/source/old/1.0.1/openssl-{1.0.1a,1.0.1f,1.0.1g}.tar.gz"
+public_keys:
+  - "F295C759"
+notes: |
+    All files are signed with F295C759, however GPG does not like PGP-2 keys

@@ -5,3 +5,8 @@ install_type: source
 variables:
   version:
     - 4.2.6p3
+source:
+  - "http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/ntp-4.2.6p3.tar.gz"
+public_keys: []
+notes: |
+    The upstream only provides MD5 hashes
