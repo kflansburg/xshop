@@ -31,12 +31,13 @@ def template_file_contents(path,d):
 #	Replaces substitutions within a file. Destructive
 #
 def template_file(path,d):
-	template = env.get_template( path )
-	output = template.render( d )
-	os.remove(path)
-	f = open(path,'w')
-	f.write(output)
-	f.close()
+	if re.compile('.*Dockerfile').match(path):
+		template = env.get_template( path )
+		output = template.render( d )
+		os.remove(path)
+		f = open(path,'w')
+		f.write(output)
+		f.close()
 
 #
 #	Traverses a folder and runs template_file on each
