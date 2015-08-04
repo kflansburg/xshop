@@ -1,5 +1,0 @@
-from xshop import test
-import sys
-T = test.TestCase({'version':'4.3','patch':int(sys.argv[1])},'source')
-
-T.run()
