@@ -11,7 +11,7 @@ from subprocess import call as sh
 import os
 from xshop import colors
 def generate_urls(urls):
-    REGEX = '([^{}]+)({.+})([^{}]+)'
+    REGEX = '([^{}]+)({.+})([^{}]*)'
     r = re.compile(REGEX)
     results = []    
     for url in urls:
