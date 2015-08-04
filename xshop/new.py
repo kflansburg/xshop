@@ -58,6 +58,11 @@ def new_test_project(library, name):
 	c = config.Config()
 	c.put('dependencies',[])
 	c.put('build-dependencies',[])
-	c.put('library',library)	
+	c.put('library',library)
+	c.put('install_type','source')
+	c.put('variables',{'version':[]})
+	c.put('source', [])
+	c.put('public_keys',[])
+	c.put('notes',"")
 	os.chdir('..')
 
