@@ -1,9 +1,0 @@
-build-dependencies: []
-dependencies: []
-install_type: source
-library: hello
-notes: ''
-public_keys: []
-source: []
-variables:
-  version: []
