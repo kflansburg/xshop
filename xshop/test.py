@@ -59,22 +59,32 @@ class HookRunner:
 				self.error=True
 
 class TestCase:
-	def __init__(self,d,source,target='strawman'):
+	def __init__(self,variables,target=None):
 		# Get Project Configuration
-		self.target=target
-		self.config = config.Config()
+                self.config = config.Config()
 		self.proj_dir = os.getcwd()
-		self.compose = config.parse_docker_compose()
-		self.library=self.config.get('library')
+                self.compose = config.parse_docker_compose()
+                self.library=self.config.get('library')
+		self.variables = variables
+                self.target = target
+                try:
+                    self.constants = self.config.get('constants')
+                except KeyError:
+                    self.constants = {}
 
 		# Build Dictionary of Containers and Their Random Names
 		self.containers = {}
 		for c in self.compose:
 			self.containers[c]=random_name()
 		
-		# Get Test Case Variables
-		self.source = source
-		self.d = d
+                self.install_type = self.config.get('install_type')
+                
+                if 'version' in self.variables:
+                    self.version = self.variables['version']
+                elif 'version' in self.constants:
+                    self.version = self.constants['version']
+                else:
+                    self.verions = ''
 
 		# Initialize Result Values
 		self.vuln=None
@@ -82,12 +92,11 @@ class TestCase:
 
 	# Builds template dict by adding non independent variables
 	def __templated(self,name):
-		templated = copy.deepcopy(self.d)
+		templated = copy.deepcopy(self.variables)
+                templated.update(self.constants)
 		templated['container_name'] = name
 		templated['library'] = self.library
-		templated['install_type'] = self.source
-		templated['builddeps'] = self.config.get('build-dependencies')
-		templated['deps']=self.config.get('dependencies')
+                templated['install_type'] = self.install_type
 		return templated	
 
 	# Returns the dockerfile of a given container
@@ -124,16 +133,16 @@ class TestCase:
 
 			# Copy in any necessary files
 			if name=='target':
-				if self.source=='source':
+				if self.install_type=='source':
 					source_file = "%s/source/%s-%s.tar.gz"%\
-						(self.proj_dir, self.library, self.d['version'])
+						(self.proj_dir, self.library, self.version)
 					shutil.copy2(source_file, TMP_FOLDER+"/")
-				elif self.source=='debian':
+				elif self.install_type=='debian':
 					pkg_dir = "%s/packages/%s-%s/"%\
-						(self.proj_dir, self.library, self.d['version'])
+						(self.proj_dir, self.library, self.version)
 					shutil.copytree(pkg_dir, 
 						TMP_FOLDER+"/%s-%s"%\
-						(self.library, self.d['version'],))
+						(self.library, self.self.version,))
 
 		
 			dockerw.run_docker_command(['docker','build','-t',image_name,TMP_FOLDER])
@@ -181,12 +190,16 @@ class TestCase:
 			dockerfile+="ADD test /home/\n"\
 						"WORKDIR /home/\n"
 
-			# Add independent variables to environment
-			for key in self.d:
-				val = self.d[key]
+			# Add project values to environment
+			for key in self.constants:
+				val = self.constants[key]
 				if val and not val=='':
-					dockerfile=dockerfile+"ENV %s %s\n"%(key,self.d[key])
-			
+					dockerfile=dockerfile+"ENV %s %s\n"%(key,self.constants[key])
+			for key in self.variables:
+				val = self.variables[key]
+				if val and not val=='':
+					dockerfile=dockerfile+"ENV %s %s\n"%(key,self.variables[key])
+		
 			f.write(dockerfile)
 			f.close()
 
@@ -218,27 +231,13 @@ class TestCase:
 			handler.close()
 			self.log.removeHandler(handler)
 
-	#
-	# Builds target container as xshop_[library]:[sorted_var_vals]
-	# Outputs dockerfile to build/ as Dockerfile_[sorted_var_vals]
-	# 
-	def build(self):
-
-		logging.basicConfig(filename='build.log',level=logging.DEBUG)	
-		self.log=logging.getLogger()
-		print colors.colors.BOLD+"Building: "+colors.colors.ENDC+str(self.d)+": ",
-		name = '_'.join(map(lambda x: self.d[x],sorted(self.d.keys())))
-		image_name='xshop_%s:%s'%(self.library, name)
-		try:
-			self.__build_container('target',image_name)
-			f = open(self.proj_dir+'/build/Dockerfile_'+name,'w')
-			f.write(self.dockerfile('target'))
-			f.close()
-			print colors.colors.OKGREEN+"Done."+colors.colors.ENDC
-		except Exception as e:
-			print colors.colors.FAIL+"Error!"+colors.colors.ENDC
-			print e
-		self.__end_logging()
+	def export(self):
+                # Generates Dockerfile for TestCase
+		name = '_'.join(map(lambda x: self.variables[x],sorted(self.variables.keys())))
+		
+                f = open(self.proj_dir+'/build/Dockerfile_'+name,'w')
+		f.write(self.dockerfile('target'))
+	        f.close()
 
 	# Removes temporary test resources
 	def __clean_test(self):
@@ -296,7 +295,7 @@ class TestCase:
 		self.vuln = False
 		self.hook_error=False
 		try:
-			print colors.colors.BOLD+"Running Test: "+colors.colors.ENDC+str(self.d)+", ",
+			print colors.colors.BOLD+"Running Test: "+colors.colors.ENDC+str(self.variables)+", ",
 			self.__launch_test()
 
 			# Call hook
@@ -329,9 +328,8 @@ class TestCase:
 class Trial:
 	# Accepts ivars and source and saves them as instance variables
 	# Recursively builds multidimensional array of test cases
-	def __init__(self,ivars,source):
+	def __init__(self,ivars):
 		self.ivars = ivars
-		self.source = source
 		self.cases = self.__array_builder({},copy.deepcopy(self.ivars))	
 
 	# Recursive function for building array of test cases
@@ -339,7 +337,7 @@ class Trial:
 		# If no more variable dimensions, create test case
 		if ivars=={}:
 			dnew = copy.deepcopy(d)
-			return TestCase(dnew,self.source)
+			return TestCase(dnew)
 		# Else, pop var and return list of recursive call with each value
 		else:
 			key, value = ivars.popitem()
@@ -369,7 +367,7 @@ class Trial:
 		return self.recursive(self.cases,
 			lambda o: {
 				'vuln': o.vuln,
-				'vars':o.d,
+				'vars':o.variables,
 				'results':o.results})
 
 	# Builds and tags images for each target container, outputs dockerfiles

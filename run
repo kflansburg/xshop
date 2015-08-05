@@ -36,11 +36,6 @@ def print_new_help():
 	print "\tLibrary name must reflect the name used for source tarballs"
 	print "\tProject name is arbitrary"
 	
-def run_test(source,version):
-	d = {'version':version}	
-	t = test.TestCase(d,source)
-
-	t.run()
 if len(sys.argv)<2:
 	print_general_help()
 elif sys.argv[1] =='new':
@@ -58,31 +53,20 @@ elif sys.argv[1] =='test':
 	(options,args) = parser.parse_args(sys.argv[2:])
 	if len(args)==0:
 		c = config.Config()
-		install_type = c.get('install_type')
 		variables = c.get('variables')
-		if install_type and isinstance(variables,dict) and len(variables.keys())>0:
-			T = test.Trial(variables,install_type)
+		if isinstance(variables,dict) and len(variables.keys())>0:
+			T = test.Trial(variables)
 			T.run()
 			f = open('output.log','w')
 			f.write(str(T.results()))
 			f.close()		
-	elif len(args)>=2:
-		source = args[0]
-		versions = args[1:]
-	
-		if not source in ['remote','debian','source']:
-			parser.print_help()
-			print "Source '"+source+"' not recognized."
-		else:
-			for version in versions:
-				run_test(source,version)
 
 elif sys.argv[1]=='build':
 	versions = source_versions()
 	print "Building Versions:"
 	print versions
 	T = test.Trial({'version':versions}, 'source')
-	T.build()
+	T.export()
 elif sys.argv[1]=='build_image':
 	dockerw.build_image(sys.argv[2])
 
@@ -94,7 +78,7 @@ elif sys.argv[1]=='attach':
 	for v in var:
 		v = v.split('=')
 		variables[v[0]]=v[1]
-	T = test.TestCase(variables,source)
+	T = test.TestCase(variables)
 	T.attach(c)
 elif sys.argv[1]=='pull':
         pull.pull()
