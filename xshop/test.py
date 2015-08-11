@@ -199,6 +199,8 @@ class TestCase:
 				val = self.variables[key]
 				if val and not val=='':
 					dockerfile=dockerfile+"ENV %s %s\n"%(key,self.variables[key])
+                        
+			dockerfile=dockerfile+"ENV %s %s\n"%('container',c)
 		
 			f.write(dockerfile)
 			f.close()
@@ -350,12 +352,15 @@ class Trial:
 
 	# Recursively applies func to TestCases and returns results
 	def recursive(self,obj,func):
-		results=[]
-		for o in obj:
-			if isinstance(o,list):
-				results.append(self.recursive(o,func))
+                if isinstance(obj,list):
+		    results=[]
+        	    for o in obj:
+    	        	if isinstance(o,list):
+            		    results.append(self.recursive(o,func))
 			else:
-				results.append(func(o))
+			    results.append(func(o))
+                else:
+                    results = func(obj)
 		return results
 
 	# Runs a test case for each value

@@ -53,13 +53,16 @@ elif sys.argv[1] =='test':
 	(options,args) = parser.parse_args(sys.argv[2:])
 	if len(args)==0:
 		c = config.Config()
-		variables = c.get('variables')
-		if isinstance(variables,dict) and len(variables.keys())>0:
-			T = test.Trial(variables)
-			T.run()
-			f = open('output.log','w')
-			f.write(str(T.results()))
-			f.close()		
+                try:
+                    variables = c.get('variables')
+                except KeyError:
+                    variables = {}
+		
+                T = test.Trial(variables)
+		T.run()
+		f = open('output.log','w')
+		f.write(str(T.results()))
+		f.close()		
 
 elif sys.argv[1]=='build':
 	versions = source_versions()
