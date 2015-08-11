@@ -29,5 +29,3 @@ WORKDIR /home/
 
 #Add self signed cert
 WORKDIR /home/
-ADD server.key /home/
-ADD server.cert5 /home/

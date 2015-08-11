@@ -5,10 +5,9 @@ from xshop import test
 
 
 variables = {'version':['1.0.1a','1.0.1g']}
-source = 'debian'
-T = test.TestCase({'version':'1.0.1a'},'debian',target='host')
+T = test.TestCase({'version':'1.0.1a'})
 
 
 
-T.run()
+print T.dockerfile('target')
 
