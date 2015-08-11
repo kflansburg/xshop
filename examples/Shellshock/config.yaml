@@ -1,58 +1,10 @@
 build-dependencies: []
-dependencies: []
 library: bash
-variables:
-  version:
-    - 4.3
-  patch:
-    - 0
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    - 8
-    - 9
-    - 10
-    - 11
-    - 12
-    - 13
-    - 14
-    - 15
-    - 16
-    - 17
-    - 18
-    - 19
-    - 20
-    - 21
-    - 22
-    - 23
-    - 24
-    - 25
-    - 26
-    - 27
-    - 28
-    - 29
-    - 30
-    - 31
-    - 32
-    - 33
-    - 34
-    - 35
-    - 36
-    - 37
-    - 38
-    - 39
-  cve:
-    - '6271'
-    - '6277'
-    - '6278'
-    - '7169'
-    - '7186'
-    - '7187'
-    - 'LAST'
+constants:
+  dependencies: []
+  version: 4.3
+  patch: 0
+  cve: 6271
 install_type: 'source'
 public_keys:
  - "64EA74AB"
