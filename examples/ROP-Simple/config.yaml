@@ -1,4 +1,4 @@
-build-dependencies: [vim, tar]
+build-dependencies: []
 dependencies: []
 install_type: source
 library: ROP-Simple
