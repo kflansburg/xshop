@@ -1,0 +1,12 @@
+build-dependencies: [vim, tar]
+dependencies: []
+install_type: source
+library: ROP-Simple
+notes: ''
+public_keys: []
+source: []
+variables:
+  version: [1]
+  cflags:
+    - ""
+    - "-fsanitize=address"
