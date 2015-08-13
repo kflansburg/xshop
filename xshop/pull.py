@@ -92,6 +92,7 @@ def pull():
         keys = c.get('public_keys')    
         print "Public Keys:"
         print colors.colors.WARNING+"THESE MUST BE ADDED MANUALLY"+colors.colors.ENDC
+	print "gpg  --keyserver pgp.mit.edu --send-keys <key-id>"
         for k in c.get('public_keys'):
             print k
     except KeyError:
