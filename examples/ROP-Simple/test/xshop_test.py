@@ -68,16 +68,16 @@ def exploit():
 #
 
 def run(H):
-	H.run('attacker','run_exploit')
+    H.run('target','run_exploit')
 
 def run_exploit():
     try:
         cflag = os.environ['cflags']
     except:
         cflag = ''
-    
+	
     # TODO : compiling in test code is ugly
-    os.system("make CC=clang CFLAGS=%s" % cflag)
+    os.system('make CC=clang CFLAGS="%s"' % cflag)
     
     global p, stdin, stdout
     p = Popen("./ROP-Simple 2>/tmp/err", shell=True, stdin=PIPE, stdout=PIPE)
