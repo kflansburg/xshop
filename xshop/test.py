@@ -194,11 +194,11 @@ class TestCase:
 			for key in self.constants:
 				val = self.constants[key]
 				if val and not val=='':
-					dockerfile=dockerfile+"ENV %s %s\n"%(key,self.constants[key])
+					dockerfile=dockerfile+'ENV %s "%s"\n'%(key,self.constants[key])
 			for key in self.variables:
 				val = self.variables[key]
 				if val and not val=='':
-					dockerfile=dockerfile+"ENV %s %s\n"%(key,self.variables[key])
+					dockerfile=dockerfile+'ENV %s "%s"\n'%(key,self.variables[key])
                         
 			dockerfile=dockerfile+"ENV %s %s\n"%('container',c)
 		

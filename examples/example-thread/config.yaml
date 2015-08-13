@@ -1,6 +1,6 @@
 build-dependencies: []
 dependencies: []
-install_type: source
+install_type: remote
 library: none
 notes: ''
 public_keys: []

@@ -1,12 +1,12 @@
 build-dependencies: [vim, tar]
 dependencies: []
-install_type: source
+install_type: remote
 library: ROP-Simple
 notes: ''
 public_keys: []
 source: []
 variables:
-  version: [1]
   cflags:
-    - ""
-    - "-fsanitize=address"
+#    - ""
+#    - "-fsanitize=address"
+    - "-fsanitize=cfi -flto"
