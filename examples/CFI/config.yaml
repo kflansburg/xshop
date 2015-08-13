@@ -1,0 +1,12 @@
+build-dependencies: []
+dependencies: []
+install_type: remote
+library: CFI
+notes: ''
+public_keys: []
+source: []
+variables:
+  version: [1]
+  cxxflags:
+    - ""
+    - "-fsanitize=cfi -flto"
