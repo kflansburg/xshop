@@ -10,7 +10,7 @@ from subprocess import call as sh
 import os
 
 def run(H):
-	H.run('attacker','run_exploit')
+	H.run('target','run_exploit')
 
 def run_exploit():
     try:
