@@ -1,13 +1,12 @@
 build-dependencies: []
 dependencies: []
 install_type: remote
-library: ROP-Simple
+library: CFI
 notes: ''
 public_keys: []
 source: []
 variables:
-  cflags:
+  version: [1]
+  cxxflags:
     - ""
     - "-fsanitize=cfi -flto"
-    - "-fsanitize=address"
-    - "-fsanitize=safe-stack"

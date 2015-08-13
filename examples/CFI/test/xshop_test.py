@@ -7,22 +7,26 @@
 # Hooks can be any function in this file.
 #
 from subprocess import call as sh
+from subprocess import *
 import os
 
 def run(H):
 	H.run('target','run_exploit')
 
 def run_exploit():
+    os.system("ls -als")
+    os.system("clang -v")
     try:
-        cflag =os.environ['cflag']
+        cflag =os.environ['cxxflags']
     except KeyError:
         cflag=''
 
-    if sh(['clang','tsan_example.c','-pthread',cflag]):
+    if sh(['make','CXX=clang++','CXXFLAGS=%s' % cflag]):
         return 1
 
-    ret = sh(['./a.out'])
-    if ret==0:
-        return 2
-    else:
+    p = Popen(['./CFI'], shell=True, stdout=PIPE)
+    try:
+        if (p.stdout.read(4) == "EVIL"):
+            return 2
+    except:
         return 0
