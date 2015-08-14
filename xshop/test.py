@@ -43,20 +43,25 @@ def random_name():
 TMP_FOLDER='test-tmp'
 
 class HookRunner:
-	def __init__(self,results,containers):
+	def __init__(self,results,containers,target):
+                self.target=target
 		self.error=False
 		self.vuln=False
 		self.results = results
 		self.containers = containers
 	def run(self,container,hook):
-		result = dockerw.run_hook(self.containers[container],hook)
-		self.results.append(result)
-		ret = result['ret']
-		if not ret==0:
-			if ret==2:
-				self.vuln=True
-			else:
-				self.error=True
+                if container=='target' and (not (self.target==None or self.target=='host')):
+                    # Skip hook, remote target
+                    pass
+                else:
+                        result = dockerw.run_hook(self.containers[container],hook)
+                        self.results.append(result)
+                        ret = result['ret']
+                        if not ret==0:
+                                if ret==2:
+                                        self.vuln=True
+                                else:
+                                        self.error=True
 
 class TestCase:
 	def __init__(self,variables,target=None):
@@ -118,9 +123,9 @@ class TestCase:
 
 
 
-		elif name=='target' and self.target=='remote':
+		elif name=='target' and (not self.target==None):
 			pass
-			# Nothing, already running
+			# Dont build target, attacking remote
 
 		else:
 			# Construct image for container from supplied context	
@@ -169,29 +174,30 @@ class TestCase:
 		os.mkdir(TMP_FOLDER+"/containers")
 		# For each container
 		for c,v in self.containers.iteritems():
-			# Create Context Folder
-			os.mkdir(TMP_FOLDER+"/containers/"+c)
-			# Copy in test code
-			shutil.copytree(self.proj_dir+'/test',
-				TMP_FOLDER+"/containers/"+c+"/test")
-			# Write out Dockerfile
-			f=open(TMP_FOLDER+"/containers/"+c+"/Dockerfile",'w')
+                        # Skip building remote target
+                        if c=='target' and (not (self.target==None or self.target=='host')):
+                                pass    
+                        else:                                
+                                # Create Context Folder
+                                os.mkdir(TMP_FOLDER+"/containers/"+c)
+                                # Copy in test code
+                                shutil.copytree(self.proj_dir+'/test',
+                                        TMP_FOLDER+"/containers/"+c+"/test")
+                                # Write out Dockerfile
+                                f=open(TMP_FOLDER+"/containers/"+c+"/Dockerfile",'w')
 
-			if c=='target' and self.target=='remote':
-				# Configure network route to target
-				pass
-			elif c=='target' and self.target=='host':
-				# FROM xshop:host
-				dockerfile="FROM xshop:host\n"
-			else:
-				dockerfile="FROM xshop:%s_build\n"%(v,)
+                                if c=='target' and self.target=='host':
+                                        # FROM xshop:host
+                                        dockerfile="FROM xshop:host\n"
+                                else:
+                                        dockerfile="FROM xshop:%s_build\n"%(v,)
 
 
-			dockerfile+="ADD test /home/\n"\
-						"WORKDIR /home/\n"
+                                dockerfile+="ADD test /home/\n"\
+                                                        "WORKDIR /home/\n"
 
-			f.write(dockerfile)
-			f.close()
+                                f.write(dockerfile)
+                                f.close()
 
 		# Copy in compose, substituting container pseudonyms
 		f = open(self.proj_dir+"/docker-compose.yml",'r')
@@ -201,32 +207,45 @@ class TestCase:
 		newd={}	
 	
 		for c in d:
-			newc = self.containers[c]
+                        if c=='target' and (not (self.target==None or self.target=='host')):
+                                # Dont include remote target in docker compose file
+                                pass
+                        else:
+                                newc = self.containers[c]
 
-                        # Update links to match random names
-			if 'links' in d[c].keys():
-				newlinks=[]
-				for l in d[c]['links']:
-					newlinks.append("%s:%s"%(self.containers[l],l,))
-				d[c]['links']=newlinks
-                                #TODO If it is connecting to remote, overrite that link
+                                # Update links to match random names
+                                if 'links' in d[c].keys():
+                                        newlinks=[]
+                                        for l in d[c]['links']:
+                                                # Only add target link for non remote attack
+                                                if l=='target' and (not (self.target==None or self.target=='host')):
+                                                        pass
+                                                else:
+                                                        newlinks.append("%s:%s"%(self.containers[l],l,))
+                            
+                                        d[c]['links']=newlinks
+                                
+                                # For remote attack, add outgoing route
+                                if not (self.target==None or self.target=='host'):
+                                        d[c]['extra_hosts']=['target:'+self.target]
+                      
 
-                        #TODO move env variables to here
-                        if not 'environment' in d[c].keys():
-                                d[c]['environment']={}                        
-                        for key in self.constants:
-                                val = self.constants[key]
-         	                if val and not val=='':
-                                        d[c]['environment'][key]=val
-                        for key in self.variables:
-                                val = self.variables[key]
-                                if val and not val=='':
-                                        d[c]['environment'][key]=val
+                                if not 'environment' in d[c].keys():
+                                        d[c]['environment']={}                        
+                                for key in self.constants:
+                                        val = self.constants[key]
+                                        if val and not val=='':
+                                                d[c]['environment'][key]=val
+                                for key in self.variables:
+                                        val = self.variables[key]
+                                        if val and not val=='':
+                                                d[c]['environment'][key]=val
 
-	                d[c]['environment']['container']=c
-			newd[newc]=d[c]
+                                d[c]['environment']['container']=c
+                                newd[newc]=d[c]
 
 		f = open(TMP_FOLDER+'/docker-compose.yml','w')
+                print newd
 		f.write(yaml.dump(newd))
 		f.close()
 
@@ -261,7 +280,7 @@ class TestCase:
 	def __call_hooks(self):
 		sys.path.append(self.proj_dir+"/test")
 		import xshop_test
-		H = HookRunner(self.results,self.containers)
+		H = HookRunner(self.results,self.containers,self.target)
 		xshop_test.run(H)
 		if H.error:
 			self.hook_error=True
