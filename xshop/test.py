@@ -245,7 +245,6 @@ class TestCase:
                                 newd[newc]=d[c]
 
 		f = open(TMP_FOLDER+'/docker-compose.yml','w')
-                print newd
 		f.write(yaml.dump(newd))
 		f.close()
 
