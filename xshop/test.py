@@ -190,18 +190,6 @@ class TestCase:
 			dockerfile+="ADD test /home/\n"\
 						"WORKDIR /home/\n"
 
-			# Add project values to environment
-			for key in self.constants:
-				val = self.constants[key]
-				if val and not val=='':
-					dockerfile=dockerfile+'ENV %s "%s"\n'%(key,self.constants[key])
-			for key in self.variables:
-				val = self.variables[key]
-				if val and not val=='':
-					dockerfile=dockerfile+'ENV %s "%s"\n'%(key,self.variables[key])
-                        
-			dockerfile=dockerfile+"ENV %s %s\n"%('container',c)
-		
 			f.write(dockerfile)
 			f.close()
 
@@ -214,14 +202,30 @@ class TestCase:
 	
 		for c in d:
 			newc = self.containers[c]
+
+                        # Update links to match random names
 			if 'links' in d[c].keys():
 				newlinks=[]
 				for l in d[c]['links']:
 					newlinks.append("%s:%s"%(self.containers[l],l,))
 				d[c]['links']=newlinks
+                                #TODO If it is connecting to remote, overrite that link
+
+                        #TODO move env variables to here
+                        if not 'environment' in d[c].keys():
+                                d[c]['environment']={}                        
+                        for key in self.constants:
+                                val = self.constants[key]
+         	                if val and not val=='':
+                                        d[c]['environment'][key]=val
+                        for key in self.variables:
+                                val = self.variables[key]
+                                if val and not val=='':
+                                        d[c]['environment'][key]=val
+
+	                d[c]['environment']['container']=c
 			newd[newc]=d[c]
-					
-	
+
 		f = open(TMP_FOLDER+'/docker-compose.yml','w')
 		f.write(yaml.dump(newd))
 		f.close()
