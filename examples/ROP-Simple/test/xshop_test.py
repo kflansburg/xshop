@@ -68,11 +68,7 @@ def exploit():
 #
 
 def run(H):
-<<<<<<< HEAD
-    H.run('target','run_exploit')
-=======
 	H.run('target','run_exploit')
->>>>>>> 9373c78ce26629042af72f0a3c8fcb5f915ce794
 
 def run_exploit():
     try:
