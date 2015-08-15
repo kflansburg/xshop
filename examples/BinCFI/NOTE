@@ -39,3 +39,15 @@ GIVE ME INPUT
 $ echo 'PWNED!' 
 PWNED!
 
+- BinCFI TEST Result
+==========BinCFI TEST RESULT==========
+Vulnerable : 08048321
+Vulnerable : 08048365
+Vulnerable : 0804839F
+Vulnerable : 080483C4
+Vulnerable : 080483F2
+Vulnerable : 08048422
+Vulnerable : 08048447
+Vulnerable : 0804846B                                                                                                                            Vulnerable : 08048483                                                                                                                            Vulnerable : 080484B2
+Vulnerable : 080484DD
+==========BinCFI TEST RESULT==========

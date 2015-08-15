@@ -12,12 +12,6 @@
 #	service process can be started here instead of the loop. 
 #
 
-
-attacker:
-  build: containers/attacker/
-  links:
-    - target 
-  command: /bin/bash -c "while true; do sleep .1; done"
 target:
   build: containers/target/
   command: /bin/bash -c "while true; do sleep .1; done"

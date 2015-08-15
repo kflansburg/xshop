@@ -2,8 +2,11 @@ build-dependencies: []
 dependencies: []
 install_type: source
 library: BOF
-notes: ''
 public_keys: []
 source: []
 variables:
-  version: []
+  version: ['1']
+notes: |
+  The xshop test is in the test.log
+  Please find BinCFi in test.log
+  Then you can find addresses which can be jumped by overflow
