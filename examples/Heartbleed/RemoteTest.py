@@ -4,7 +4,10 @@
 
 from xshop import test
 
+variables = {"AWS Vulnerable":"52.20.169.32","Google":"74.125.21.102"}
 
-T = test.TestCase({},target='52.20.169.32')
 
-T.run()
+for k in variables.keys():
+    v = variables[k]
+    T = test.TestCase({'host':k},target=v)
+    T.run()
