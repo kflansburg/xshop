@@ -85,11 +85,11 @@ class TestCase:
                 self.install_type = self.config.get('install_type')
                 
                 if 'version' in self.variables:
-                    self.version = self.variables['version']
+                	self.version = self.variables['version']
                 elif 'version' in self.constants:
-                    self.version = self.constants['version']
+                	self.version = self.constants['version']
                 else:
-                    self.verions = ''
+                	self.version = ''
 
 		# Initialize Result Values
 		self.vuln=None
@@ -97,8 +97,8 @@ class TestCase:
 
 	# Builds template dict by adding non independent variables
 	def __templated(self,name):
-		templated = copy.deepcopy(self.variables)
-                templated.update(self.constants)
+		templated = copy.deepcopy(self.constants)
+                templated.update(self.variables)
 		templated['container_name'] = name
 		templated['library'] = self.library
                 templated['install_type'] = self.install_type
@@ -147,7 +147,7 @@ class TestCase:
 						(self.proj_dir, self.library, self.version)
 					shutil.copytree(pkg_dir, 
 						TMP_FOLDER+"/%s-%s"%\
-						(self.library, self.self.version,))
+						(self.library, self.version,))
 
 		
 			dockerw.run_docker_command(['docker','build','-t',image_name,TMP_FOLDER])
