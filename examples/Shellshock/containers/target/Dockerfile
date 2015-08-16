@@ -13,13 +13,17 @@ WORKDIR /home/
     RUN apt-get -y install -f
 
 {% elif install_type=="source" %}
+	RUN apt-get -y install bison
 	RUN apt-get -y install patch
 	ADD {{ library }}-{{ version }}.tar.gz /home/
-	WORKDIR /home/{{ library }}-{{ version }}
+	
+	WORKDIR /home/{{ library }}-{{ version }}/
 	ADD patches .
+
 	{% for i in range(1,patch|int+1) %}
-		RUN patch -p0 < bash43-{{ "%03d" % i }}
+			RUN patch -p0 < bash{{ version | replace(".","") }}-{{ "%03d" % i }}
 	{% endfor %} 
+
     RUN ./configure --prefix=/usr
     RUN make
     RUN make install
