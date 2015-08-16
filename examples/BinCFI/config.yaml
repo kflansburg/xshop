@@ -1,5 +1,6 @@
-build-dependencies: []
-dependencies: []
+constants:
+  builddeps: ['vim', 'gcc-multilib', 'python-pip', 'python-dev', 'libswitch-perl', 'gdb']
+  dependencies: []
 install_type: source
 library: BOF
 public_keys: []
