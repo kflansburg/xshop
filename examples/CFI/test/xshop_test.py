@@ -14,19 +14,13 @@ def run(H):
 	H.run('target','run_exploit')
 
 def run_exploit():
-    os.system("ls -als")
-    os.system("clang -v")
-    try:
-        cflag =os.environ['cxxflags']
-    except KeyError:
-        cflag=''
-
-    if sh(['make','CXX=clang++','CXXFLAGS=%s' % cflag]):
-        return 1
-
     p = Popen(['./CFI'], shell=True, stdout=PIPE)
+    os.system("./CFI")
+    print "I am running run_Explotit!"
     try:
-        if (p.stdout.read(4) == "EVIL"):
+        r = p.stdout.read(4)
+        print "="*10 + "\nI_LOVE_IU:" +r
+        if (r == "EVIL"):
             return 2
     except:
         return 0

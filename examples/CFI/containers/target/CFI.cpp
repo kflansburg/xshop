@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
+
 class Person {
   public:
   virtual void play() {
@@ -17,6 +19,7 @@ class Student: public Person {
 
 void evil() {
   printf("EVIL\n");
+  fflush(stdout);
 }
 
 int* evil_vftable[2] = {(int*)evil, NULL};
