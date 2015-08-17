@@ -51,18 +51,9 @@ end
 
 projects.each do |prj|
   lines = {:test => 0, :build => 0} 
-  Dir.glob("./#{prj}/*").each do |file|
-    name = File.basename(file)
-    if (name == 'test') # test dir
-      lines['test'] = get_sloc_dir(file) 
-    elsif (name == 'containers')
-      lines['build'] = get_sloc_dir(file)
-    elsif (name == 'config.yaml')
-      lines['config'] = get_sloc(file)
-    else
-      get_sloc_dir(file)
-    end
-  end
+  lines['test'] = get_sloc("#{prj}/test/xshop_test.py")
+  lines['build'] = get_sloc_dir("#{prj}/containers")
+  lines['config'] = get_sloc("#{prj}/config.yaml")
 
   puts "Project : #{prj}"
   puts "\tTest : #{lines['test']}"
