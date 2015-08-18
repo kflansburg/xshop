@@ -56,7 +56,7 @@ projects.each do |prj|
   lines['config'] = get_sloc("#{prj}/config.yaml")
 
   puts "Project : #{prj}"
-  puts "\tTest : #{lines['test']}"
-  puts "\tBuild : #{lines['build']}"
   puts "\tConfig : #{lines['config']}"
+  puts "\tBuild : #{lines['build']}"
+  puts "\tTest : #{lines['test']}"
 end
