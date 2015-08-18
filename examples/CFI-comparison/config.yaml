@@ -1,0 +1,13 @@
+constants:
+  builddeps: ['vim', 'gcc-multilib', 'python-pip', 'python-dev', 'libswitch-perl', 'gdb']
+  dependencies: []
+install_type: source
+library: CFI
+public_keys: []
+source: []
+variables:
+  version: ['1']
+  compiler: ['g++', 'g++-verify', 'clang++-cfi']
+notes: |
+  The xshop test is in the test.log
+  Need to be g++ compiled with --enabled-vtable-verify in containers/target/
