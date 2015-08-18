@@ -6,8 +6,7 @@ library: CFI
 public_keys: []
 source: []
 variables:
-  version: ['1']
-  compiler: ['g++', 'g++-verify', 'clang++-cfi']
+  compiler: ['g++', 'clang++', 'g++ -fvtable-verify=std', 'clang++ -fsanitize-cfi']
 notes: |
   The xshop test is in the test.log
   Need to be g++ compiled with --enabled-vtable-verify in containers/target/

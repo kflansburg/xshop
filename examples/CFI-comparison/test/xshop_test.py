@@ -26,7 +26,7 @@ def exploit():
     p = Popen([TARGET, evil], stderr=PIPE)
     rc = p.wait()
     # SEGV or successfully exit
-    if rc == 0 or rc == -11:
+    if p.stderr.read(4) == "BAD\n":
         return 2 # exploit success
     else:
         return 0 # exploit fail
