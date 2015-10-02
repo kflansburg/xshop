@@ -1,4 +1,5 @@
-build-dependencies: [gawk,autoconf]
+constants:
+  builddeps: [gawk, autoconf]
 dependencies: []
 library: glibc
 install_type: source
