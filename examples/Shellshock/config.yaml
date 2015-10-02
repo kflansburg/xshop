@@ -2,8 +2,8 @@ build-dependencies: []
 library: bash
 constants:
   dependencies: []
-  patch: 25
-  version: 4.2
+  patch: 40
+  version: 4.0
 variables:
   cve:
    - 6271

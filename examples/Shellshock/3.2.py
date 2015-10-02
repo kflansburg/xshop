@@ -8,7 +8,7 @@ patches=53
 
 cves = ['6271','6277','6278','7169','7186','7187','LAST']
 
-variables = {'version':[version],'patch':list(xrange(0,patches+1)), 'cve':cves}
+variables = {'version':[version],'patch':list(xrange(54,58)), 'cve':cves}
 print "Version: "+version
 T = test.Trial(variables)
 T.run()

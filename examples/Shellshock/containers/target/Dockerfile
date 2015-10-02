@@ -14,6 +14,7 @@ WORKDIR /home/
 
 {% elif install_type=="source" %}
 	RUN apt-get -y install bison
+	RUN apt-get -y install autoconf
 	RUN apt-get -y install patch
 	ADD {{ library }}-{{ version }}.tar.gz /home/
 	
