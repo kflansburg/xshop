@@ -1,3 +1,4 @@
+"""
 #
 #	Test
 #
@@ -20,7 +21,7 @@
 #			- Passed to user for running hooks in test environment, 
 #				collects results to be returned to xshop
 #
-
+"""
 import string
 import random
 import copy
@@ -31,6 +32,7 @@ from xshop import exceptions
 from xshop import template
 from xshop import dockerw
 from xshop import config
+from xshop import ContextManager
 import shutil
 import sys
 import os
@@ -64,20 +66,31 @@ class HookRunner:
                                         self.error=True
 
 class TestCase:
+	"""
+	TestCase describes a single test, with fixed variable values.
+	It exposes methods for running the test and collecting results.
+	"""
+
 	def __init__(self,variables,target=None):
-		# Get Project Configuration
+		"""
+		Initialize TestCase objext with variable values and an optional
+		instruction to replace the target container with either a 
+		remote host or specified prebuilt container. 
+		"""
+
                 self.config = config.Config()
 		self.proj_dir = os.getcwd()
                 self.compose = config.parse_docker_compose()
-                self.library=self.config.get('library')
+                self.library = self.config.get('library')
 		self.variables = variables
                 self.target = target
+
                 try:
                     self.constants = self.config.get('constants')
                 except KeyError:
                     self.constants = {}
 
-		# Build Dictionary of Containers and Their Random Names
+		# Build a map from container names to random pseudonyms
 		self.containers = {}
 		for c in self.compose:
 			self.containers[c]=random_name()
@@ -104,8 +117,10 @@ class TestCase:
                 templated['install_type'] = self.install_type
 		return templated	
 
-	# Returns the dockerfile of a given container
 	def dockerfile(self,name):
+		"""
+		Returns the Dockerfile contents for a given container.
+		"""
 		templated = self.__templated('target')
 		return template.template_file_contents('containers/%s/Dockerfile'%(name,),
 			templated)
