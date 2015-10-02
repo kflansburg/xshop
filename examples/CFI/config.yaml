@@ -10,3 +10,4 @@ variables:
   cxxflags:
     - ""
     - "-fsanitize=cfi -flto"
+    - "-fsanitize=address"

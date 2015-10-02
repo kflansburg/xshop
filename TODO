@@ -1,4 +1,16 @@
-* Running exploit hook on remote target
-* Isolate Docker functionality so that VM can be substituted easily.
-* Refactor
-* Testing
+Container Actions:
+	Execute Hook and collect results
+	Build an environment from a Dockerfile and save as image
+	Check if image already exists
+	Shut down running test
+	Start machines with network config from compose file
+	
+Move context to docker
+ContextManager - Constructs build and compose contexts
+VirtualizationManager - Handles which virtualization is used seamlessly
+	- DockerManager - Manipulates Docker environment
+	_ VirtualBoxManager - Manipulates VirtualBox environment
+More Robust Config
+More transparent order of variables
+
+
