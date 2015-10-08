@@ -37,7 +37,6 @@ def new_test_project(library, name):
 	if os.path.isdir(name) or os.path.isfile(name):
 		raise OSError('Folder %s already exists'%(name,))
 
-
 	# Folder Structure
 	os.mkdir(name)
 	os.mkdir(name+"/containers")
@@ -54,15 +53,6 @@ def new_test_project(library, name):
 	shutil.copy2(xshop_path+"/defaults/Dockerfile-test-target-default",name+'/containers/target/Dockerfile')
 
 	os.chdir(name)
-	config.generate_new_config()
-	c = config.Config()
-	c.put('dependencies',[])
-	c.put('build-dependencies',[])
-	c.put('library',library)
-	c.put('install_type','source')
-	c.put('variables',{'version':[]})
-	c.put('source', [])
-	c.put('public_keys',[])
-	c.put('notes',"")
+	config.generate_new_config(library)
 	os.chdir('..')
 
