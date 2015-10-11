@@ -10,7 +10,6 @@ import yaml
 from xshop import colors
 from xshop import exceptions
 from xshop import template
-from xshop import dockerw
 from xshop import config
 from xshop import vmanager
 import shutil
@@ -35,7 +34,8 @@ class TestRunner:
         specified container and keeps the results. 
         """
 
-        if container=='target' and (not (self.target==None or self.target=='host')):
+        if container=='target' and ('host:' in self.target or 
+            'remote:' in self.target):
             pass
         else:
             result = self.vmanager.run_function(container, function)
@@ -45,6 +45,7 @@ class TestRunner:
                 if ret==2:
                     self.vuln=True
                 else:
+                    print result
                     self.error=True
 
 class TestCase:
@@ -53,7 +54,7 @@ class TestCase:
     It exposes methods for running the test and collecting results.
     """
 
-    def __init__(self,variables,target=None):
+    def __init__(self,variables,target=""):
         """
         Initialize TestCase object with variable values and an optional
         instruction to replace the target container with either a 
@@ -141,7 +142,6 @@ class TestCase:
 
         except Exception as e:
             print colors.colors.BOLD+"ERROR!"+colors.colors.ENDC
-            print e
             self.vuln = None
             tb = traceback.format_exc()
         finally:
