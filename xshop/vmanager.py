@@ -51,6 +51,11 @@ class VirtualizationManager:
 
         os.chdir(self.config.project_directory)
 
+    def attach(self,target):
+	os.chdir(self.config.project_directory+"/"+self.config.build_directory)
+	self.provider.attach(target)
+
+
     def stop_test(self):
         """
         Stops each virtual environment and cleans up temporary files.
@@ -65,7 +70,7 @@ class VirtualizationManager:
             self.provider.destroy_environment(container)
             os.chdir(self.config.project_directory+"/"+self.config.build_directory)
     
-        print "Removing Temp Files"
+        logging.info("Removing Temp Files")
         os.chdir(self.config.project_directory)
         shutil.rmtree(self.config.build_directory)
 
