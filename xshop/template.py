@@ -9,12 +9,12 @@ def __get_env(path):
     templateEnv = jinja2.Environment( loader=templateLoader )
     return templateEnv
 
-def template_container_dockerfile(config, container, template_dict):
+def template_container_dockerfile(config, container):
     """
     Returns the contents of the specified container's Dockerfile,
     with the dictionary of template values applied.
     """
-    
+    template_dict = config.test_vars    
     template_dict.update({'container_name':container})
     dockerfilepath = "/containers/"+container+"/Dockerfile"
     Templater = __get_env(config.project_directory)
