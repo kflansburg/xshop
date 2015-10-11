@@ -47,22 +47,12 @@ elif sys.argv[1] =='new':
 		print "Building project "+project+" for library "+library+"."
 		new.new_test_project(library, project)
 elif sys.argv[1] =='test':
-	usage = "usage: %prog test [options] [source] [version1] [version2] ...\n\tMust specify at least one version."
-	parser = OptionParser(usage=usage)
-	parser.add_option("-f","--force", action="store_true", dest="force", help="Force rebuild of any source files.", default=False)
-	(options,args) = parser.parse_args(sys.argv[2:])
-	if len(args)==0:
-		c = config.Config()
-                try:
-                    variables = c.get('variables')
-                except KeyError:
-                    variables = {}
-		
-                T = test.Trial(variables)
-		T.run()
-		f = open('output.log','w')
-		f.write(str(T.results()))
-		f.close()		
+        variables = config.variables()
+        T = test.Trial(variables)
+	T.run()
+	f = open('output.log','w')
+	f.write(str(T.results()))
+	f.close()		
 
 elif sys.argv[1]=='build':
 	versions = source_versions()
