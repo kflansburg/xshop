@@ -19,7 +19,7 @@ def generate_new_config(library):
 
     config = {
         "constants":{
-            "build-dependencies": [],
+            "build_dependencies": [],
             "library":library,
             "install_type":"source",
             "provider":"docker"},
@@ -32,6 +32,19 @@ def generate_new_config(library):
     f = open('config.yml','w')
     f.write(yaml.dump(config))
     f.close()
+
+def variables():
+    """
+    Reads just the variables from the config file.
+    """
+    if not os.path.isfile('config.yml'):
+        raise exceptions.ConfigError("No configuration file found.")
+    
+    f = open('config.yml','r')
+    config = yaml.load(f.read())
+    if not 'variables' in config:
+        raise exceptions.ConfigError("No variables in configuration.")
+    return config['variables']
 
 class Config:
     """
@@ -70,7 +83,7 @@ class Config:
         self.compose = self.__load_file('docker-compose.yml')
         
         self.__randomize_container_names()
-        
+         
     def __load_file(self, filename):
         full_file_path = self.project_directory+"/"+filename
         if os.path.isfile(full_file_path):
