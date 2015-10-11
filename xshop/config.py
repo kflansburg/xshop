@@ -98,7 +98,9 @@ class Config:
             build_files_directory = self.project_directory+"/containers/"+c
             self.containers[c] = {'alias':randomname.generate(),
                 'build_files_directory':build_files_directory}
-            
+        
+        if "remote:" in self.target:
+            self.compose.pop('target')
 
     def __verify_parse_config(self):
         ## Optional Stuff
@@ -115,7 +117,7 @@ class Config:
         if not 'install_type' in self.test_vars:
             raise exceptions.ConfigError("No install type found!")
 
-        if self.test_vars['install_type']=='source':
+        if self.test_vars['install_type']=='source' and self.target=="":
             if not 'version' in self.test_vars:
                 raise exceptions.ConfigError("No version for source")
             if not 'library' in self.test_vars:
