@@ -5,7 +5,7 @@
 """
 
 from xshop import template
-from xshop import xshopfile
+from xshop import psupport
 from xshop import exceptions
 from xshop import sh
 from xshop import colors
@@ -13,6 +13,7 @@ import os
 import logging
 import re
 import copy
+import subprocess
 
 class Provider:
     """
@@ -25,6 +26,7 @@ class Provider:
  
     def __init__(self, config): 
         self.config=config
+        self.helper = psupport.Helper(self.config)
 
     def __run_command(self,command,test_function=False):
         """
@@ -100,20 +102,6 @@ class Provider:
             else:
                 raise exceptions.ProviderError("Command %s not recognize"%(verb,))
 
-    def __determine_source_box(self,verbs,arguments):
-        box = None
-        if 'FROM' in verbs:
-            box = arguments[verbs.index('FROM')]
-        if 'VAGRANT_FROM' in verbs:
-            box = arguments[verbs.index('VAGRANT_FROM')]
-        if box==None:
-            raise exceptions.ProviderError("No FROM statement found. "
-                "Cannot determine source box.")
-    
-        # Remove any FROM commands
-        return ([list(t) for t in zip(*filter(lambda v: not "FROM" in v[0], 
-                zip(verbs,arguments)))], box)
-        
     def __write_vagrantfile(self, box):
         """
         Writes a custom Vagrantfile.
@@ -161,9 +149,7 @@ class Provider:
     
         logging.info("Building %s:%s"%(container, alias))
 
-        [verbs,arguments] = xshopfile.read(self.config,container) 
-  
-        ([verbs,arguments],box) = self.__determine_source_box(verbs,arguments) 
+        [box, verbs, arguments] = self.helper.read(container, 'vagrant') 
          
         # Build Context
         os.mkdir(alias)
@@ -172,25 +158,18 @@ class Provider:
 
         # Write Custom Vagrantfile
         self.__write_vagrantfile(box)
-   
         
         # Copy Context
-        context = self.config.containers[container]['build_files_directory']
-        sh.run('cp %s/* .'%(context,),shell=True)
-
-        # Copy Source
-        if self.config.test_vars['install_type']=='source' and container=='target':
-            sh.run(['cp',self.config.source_path,'.'])
-
-        # Copy Test
-        sh.run(['cp','-r',self.config.test_directory,"."])
+        self.helper.copycontext(container)
+        self.helper.copysource(container)
+        self.helper.copytestfiles()
 
         # Start Box
         sh.run(['vagrant','up'])
         
         # Find IP
         ip = self.__fetch_ip()
-        print "IP FOUND %s"%( ip)
+        logging.info("IP FOUND %s"%( ip))
         self.config.containers[container]['ip']=ip
 
         # Follow build process with commands
@@ -209,9 +188,7 @@ class Provider:
         """
         print "Running %s in %s"%(function,container,)
 	os.chdir(self.config.containers[container]['alias'])
-        command = 'python2 -c "import xshop_test;import sys;sys.exit(xshop_test.%s())"'%(function,)
-	return self.__run_command(command, test_function=True)
-
+        return sh.run(['vagrant','ssh','--','sudo python2 -c "import xshop_test;import sys;sys.exit(xshop_test.%s())"'%(function,)])
 
     def __configure_networking(self):
         """
@@ -230,7 +207,11 @@ class Provider:
             command+="' | sudo tee -a /etc/hosts"
             self.__run_command(command)
             os.chdir(self.config.project_directory+"/"+self.config.build_directory)
-                   
+
+    def attach(self, container):
+        alias = self.config.containers[container]['alias']
+        os.chdir(alias)
+        subprocess.call(['vagrant','ssh'])                  
 
     def launch_test_environment(self):
         """
