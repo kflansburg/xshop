@@ -1,7 +1,9 @@
-build-dependencies: []
-dependencies: []
-library: openssl
-install_type: source
+constants:
+  build-dependencies: []
+  dependencies: []
+  library: openssl
+  install_type: source
+  provider: vagrantw
 variables:
   version:
     - 1.0.1f

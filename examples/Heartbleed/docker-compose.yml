@@ -1,12 +1,12 @@
 attacker:
-  build: containers/attacker/
+  build: attacker/
   links:
     - target 
   command: /bin/bash -c "while true; do sleep .1; done"
   environment:
     CONTAINER_NAME: attacker
 target:
-  build: containers/target/
+  build: target/
   environment:
     CONTAINER_NAME: target
   command: /bin/bash -c "while true; do sleep .1; done"

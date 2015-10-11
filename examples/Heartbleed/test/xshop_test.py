@@ -5,11 +5,11 @@ import time
 
 def run(H):
     H.run('target','start_server')
-    time.sleep(1)
+    time.sleep(5)
     H.run('attacker','run_exploit')
 
+
 def start_server():
-    print os.environ
     subprocess.Popen(["openssl"
         " s_server"
         " -key"

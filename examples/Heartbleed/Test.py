@@ -2,12 +2,8 @@
 
 from xshop import test
 
-
-
-variables = {'version':['1.0.1a','1.0.1g']}
 T = test.TestCase({'version':'1.0.1a'})
 
+T.run()
 
-
-print T.dockerfile('target')
-
+print T.results
