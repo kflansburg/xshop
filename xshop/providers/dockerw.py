@@ -80,6 +80,10 @@ class Provider:
         for use with Docker Compose.
         """
         alias = self.config.containers[container]['alias']
+        if container=='target' and 'image:' in self.config.target:
+            image = self.config.target.split(":")[1]
+            alias = image
+
         os.mkdir(container)
         os.chdir(container) 
    
@@ -109,7 +113,8 @@ class Provider:
             if 'links' in compose[container]:
                 newlinks = []
                 for l in compose[container]['links']:
-                    newlinks.append("%s:%s"%(self.config.containers[l]['alias'],l,))
+                    if not (l=='target' and 'remote:' in self.config.target):
+                        newlinks.append("%s:%s"%(self.config.containers[l]['alias'],l,))
 
                 compose[container]['links'] = newlinks
         
@@ -118,6 +123,11 @@ class Provider:
             for k,v in self.config.test_vars.iteritems():
                 compose[container]['environment'][k]=v
             compose[container]['environment']['container_name'] = container
+
+            # Support Attacking Remove
+            if 'remote:' in self.config.target:
+                host = self.config.target.split(":")[1]
+                compose[container]['extra_hosts'] = ["target:"+host]
 
             alias = self.config.containers[container]['alias']
             new_compose[alias] = compose[container]
