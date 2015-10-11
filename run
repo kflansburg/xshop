@@ -1,51 +1,20 @@
 #!/usr/bin/python2.7
 
-from optparse import OptionParser
-import logging
-import re
-import os
 from xshop import new
 from xshop import config
 from xshop import test
-from xshop import dockerw
 import sys
-from xshop import colors
 from xshop import pull
-def source_versions():
-	c = config.Config()
-	library = c.get('library')
-	reg = re.compile("^"+library+"-(.+).tar.[gx]z$")
-	result = []
-	for f in os.listdir('source'):
-		m = reg.match(f)
-		if m:
-			result.append(m.groups(1)[0])
-	return sorted(result)
 
-def print_general_help():
-	print "XSHOP"
-	print "\tAvailable Commands:"
-	print "\t\tnew [library] [name]\tCreate new project"
-	print "\t\tbuild_image [image_name]\tBuild xshop base image"
-	print "\t\tbuild\tAttempts to build every source version"
-	print "\t\ttest [source] [version(s)]\tRun tests"
+if sys.argv[1] =='new':
+    if len(sys.argv)<4 or len(sys.argv)>4:
+        print "new [library] [project_name]"
+    else:
+        library = sys.argv[2]
+        project = sys.argv[3]
+        print "Building project "+project+" for library "+library+"."
+        new.new_test_project(library, project)
 
-def print_new_help():
-	print "XSHOP - new"
-	print "\txshop new [library] [project name]"
-	print "\tLibrary name must reflect the name used for source tarballs"
-	print "\tProject name is arbitrary"
-	
-if len(sys.argv)<2:
-	print_general_help()
-elif sys.argv[1] =='new':
-	if len(sys.argv)<4 or len(sys.argv)>4 or sys.argv[2]=='-h' or sys.argv[2]=='--help':
-		print_new_help()
-	else:
-		library = sys.argv[2]
-		project = sys.argv[3]
-		print "Building project "+project+" for library "+library+"."
-		new.new_test_project(library, project)
 elif sys.argv[1] =='test':
         variables = config.variables()
         T = test.Trial(variables)
@@ -54,27 +23,20 @@ elif sys.argv[1] =='test':
 	f.write(str(T.results()))
 	f.close()		
 
-elif sys.argv[1]=='build':
-	versions = source_versions()
-	print "Building Versions:"
-	print versions
-	T = test.Trial({'version':versions}, 'source')
-	T.export()
-elif sys.argv[1]=='build_image':
-	dockerw.build_image(sys.argv[2])
-
 elif sys.argv[1]=='attach':
-	c = sys.argv[-1]
-	source = sys.argv[2]
-	var = sys.argv[3:-1]
-	variables = {}
-	for v in var:
-		v = v.split('=')
-		variables[v[0]]=v[1]
-	T = test.TestCase(variables)
-	T.attach(c)
+        if len(sys.argv) < 3:
+            print "xshop attach [variable=value]+ [container]"
+        else:
+            container = sys.argv[-1]
+            var = sys.argv[2:-1]
+            
+            variables = {}
+            for v in var:
+                    v = v.split('=')
+                    variables[v[0]]=v[1]
+            print variables
+            T = test.TestCase(variables)
+            T.attach(container)
+
 elif sys.argv[1]=='pull':
         pull.pull()
-else:
-	print_general_help()
-	print "Command '"+sys.argv[1]+"' not recognized."
