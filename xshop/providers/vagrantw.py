@@ -11,7 +11,8 @@ from xshop import sh
 from xshop import colors
 import os
 import logging
-
+import re
+import copy
 
 class Provider:
     """
@@ -33,13 +34,13 @@ class Provider:
         """
         # We add WORKDIR functionality by wrapping each command
         # In this bash statement
-        run_command = '/bin/bash -c "cd '+self.workdir+';sudo %s"'%(command,)
+        run_command = 'cd '+self.workdir+';sudo %s'%(command,)
 
 	if test_function:
    	    run_command=command 
         result = sh.run(['vagrant','ssh','-c', run_command])
         if result['return_code'] and not test_function:
-            raise ProviderError("Command '%s' returned %d\n%s\n%s"%(
+            raise exceptions.ProviderError("Command '%s' returned %d\n%s\n%s"%(
 		command,
 		result['return_code'],
 		result['stdout'],
@@ -88,7 +89,7 @@ class Provider:
         it in the Vagrant Box
         """
         for verb, argument in zip(verbs,arguments):
-            print verb + " -> " + argument
+            logging.info( verb + " -> " + argument)
             if verb=="RUN":
                 self.__run_command(argument)
             elif verb=="ADD":
@@ -113,6 +114,42 @@ class Provider:
         return ([list(t) for t in zip(*filter(lambda v: not "FROM" in v[0], 
                 zip(verbs,arguments)))], box)
         
+    def __write_vagrantfile(self, box):
+        """
+        Writes a custom Vagrantfile.
+        Includes private networking. 
+        """
+        os.remove('Vagrantfile')
+        f = open('Vagrantfile','w')
+        data = ("Vagrant.configure(2) do |config|\n"
+            '\tconfig.vm.box = "' + box + '"\n'
+            '\tconfig.vm.network "private_network", type: "dhcp"\n'
+            'end')
+        f.write(data)       
+        f.close()
+
+    def __fetch_ip(self):
+        """
+        Extracts the IP address of the virtual environment. 
+        """
+        result = self.__run_command('ifconfig eth1')
+        return re.compile('inet addr:([0-9.]+) ').search(result['stdout']).groups()[0]
+
+    def __set_environment(self,container):
+        """
+        Adds test information to the bash environment of a 
+        test environment by exporting them in ~/.bashrc
+        """
+
+        variables = copy.deepcopy(self.config.test_vars)
+        variables['container_name'] = container
+        
+        command = "echo '"
+        for var in variables: 
+            command += 'export %s="%s"\n'%(var, variables[var])
+        command +="' >> ~/.bashrc"
+
+        self.__run_command(command)
 
     def build_environment(self,container):
         """
@@ -133,12 +170,16 @@ class Provider:
         os.chdir(alias)
 	sh.run(['vagrant','init',box])
 
+        # Write Custom Vagrantfile
+        self.__write_vagrantfile(box)
+   
+        
         # Copy Context
         context = self.config.containers[container]['build_files_directory']
         sh.run('cp %s/* .'%(context,),shell=True)
 
         # Copy Source
-        if self.config.test_vars['install_type']=='source':
+        if self.config.test_vars['install_type']=='source' and container=='target':
             sh.run(['cp',self.config.source_path,'.'])
 
         # Copy Test
@@ -146,12 +187,19 @@ class Provider:
 
         # Start Box
         sh.run(['vagrant','up'])
-    
+        
+        # Find IP
+        ip = self.__fetch_ip()
+        print "IP FOUND %s"%( ip)
+        self.config.containers[container]['ip']=ip
+
         # Follow build process with commands
         self.workdir="/"
     
         self.__run_dockerfile(verbs,arguments)    
 
+        # Set environment
+        self.__set_environment(container)
 
     def run_function(self,container, function):
         """
@@ -164,13 +212,46 @@ class Provider:
         command = 'python2 -c "import xshop_test;import sys;sys.exit(xshop_test.%s())"'%(function,)
 	return self.__run_command(command, test_function=True)
 
+
+    def __configure_networking(self):
+        """
+        Adds other container name / IP information to /etc/hosts
+        """
+        os.chdir(self.config.project_directory+"/"+self.config.build_directory)
+        for c in self.config.containers:
+            d = copy.deepcopy(self.config.containers)
+            alias = d[c]['alias']
+            os.chdir(alias)
+            d.pop(c, None)
+            command = "echo '"
+            for e in d:
+                ip = d[e]['ip']
+                command += "%s\t%s\n"%(ip, e)
+            command+="' | sudo tee -a /etc/hosts"
+            self.__run_command(command)
+            os.chdir(self.config.project_directory+"/"+self.config.build_directory)
+                   
+
     def launch_test_environment(self):
         """
         Launches the full test environment, based on information in 
         test_environment.yml	
         """	
         logging.info("Launching environment")
+
+        # Copy Test Folder to each environment
+        os.chdir(self.config.project_directory+"/"+self.config.build_directory)
+        for container in self.config.containers:
+            alias = self.config.containers[container]['alias']
+            os.chdir(alias)
+            self.__add("test/*","~/")
+            os.chdir('..')
+
         # Configure Networking
+        self.__configure_networking()
+
+        self.__set_workdir("~")   
+ 
 
     def stop_test_environment(self):
         """ 
