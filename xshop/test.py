@@ -16,6 +16,7 @@ from xshop import vmanager
 import shutil
 import sys
 import os
+import traceback
 
 class TestRunner:
     """
@@ -88,6 +89,16 @@ class TestCase:
         else:
             if T.vuln:
                 self.vuln=True	
+    
+    def attach(self,target):
+        logging.basicConfig(filename='test.log',level=logging.DEBUG)	
+        self.log=logging.getLogger()
+        self.vmanager.launch_test()
+        try:
+            self.vmanager.attach(target)
+        finally:
+            self.vmanager.stop_test()
+            self.__end_logging()
 
     def run(self):
         """
@@ -100,23 +111,21 @@ class TestCase:
         self.results = []
         self.vuln = False
         self.test_error=False
-
+        
+        tb = ""
         try:
             print (colors.colors.BOLD 
                 + "Running Test: " 
                 + colors.colors.ENDC
-                + str(self.config.variables)+", ",)
+                + str(self.config.variables)+", "),
 
             self.vmanager.launch_test()
 
-            logging.info( colors.colors.OKGREEN
-                + "Running Functions in Test Environment:"
-                + colors.colors.ENDC)
+            logging.info("Running Functions in Test Environment.")
 
             self.__call_functions()
     
             if self.test_error:
-                print self.results
                 raise Exception("Error Running Test")
             else:
                 if self.vuln:
@@ -128,78 +137,81 @@ class TestCase:
                         + "Invulnerable"
                         + colors.colors.ENDC)
 
-                logging.info(colors.colors.OKGREEN
-                    + "Result: "+str(self.vuln)
-                    + colors.colors.ENDC)
-        
+                logging.info("Result: "+str(self.vuln))
+
         except Exception as e:
             print colors.colors.BOLD+"ERROR!"+colors.colors.ENDC
             print e
             self.vuln = None
-
+            tb = traceback.format_exc()
         finally:
-            logging.info(colors.colors.OKGREEN
-                + "Cleaning Up."
-                + colors.colors.ENDC)
+            logging.info("Cleaning Up.")
             self.vmanager.stop_test()
             self.__end_logging()
-            
+            if not tb=="":
+                print tb 
             return self.vuln
 
-#
-# 	Decscribes a series of tests with one or more 
-#	independent variables
-#
 class Trial:
-	# Accepts ivars and source and saves them as instance variables
-	# Recursively builds multidimensional array of test cases
-	def __init__(self,ivars):
-		self.ivars = ivars
-		self.cases = self.__array_builder({},copy.deepcopy(self.ivars))	
+    """
+    Manages variables in an experiment.
+    """
 
-	# Recursive function for building array of test cases
-	def __array_builder(self,d,ivars):
-		# If no more variable dimensions, create test case
-		if ivars=={}:
-			dnew = copy.deepcopy(d)
-			return TestCase(dnew)
-		# Else, pop var and return list of recursive call with each value
-		else:
-			key, value = ivars.popitem()
-			l = []
-			for v in value:
-				dnew = copy.deepcopy(d)
-				dnew[key]=v
-				l.append(self.__array_builder(dnew,copy.deepcopy(ivars)))
-			return l
+    def __init__(self,ivars):
+        """
+        Accepts ivars and source and saves them as instance variables
+        Recursively builds multidimensional array of test cases
+        """
+	self.ivars = ivars
+	self.cases = self.__array_builder({},copy.deepcopy(self.ivars))	
 
-	# Recursively applies func to TestCases and returns results
-	def recursive(self,obj,func):
-                if isinstance(obj,list):
-		    results=[]
-        	    for o in obj:
-    	        	if isinstance(o,list):
-            		    results.append(self.recursive(o,func))
-			else:
-			    results.append(func(o))
+    def __array_builder(self,d,ivars):
+	"""
+        Recursive function for building array of test cases.
+        """
+	
+        # If no more variable dimensions, create test case
+	if ivars=={}:
+	    dnew = copy.deepcopy(d)
+	    return TestCase(dnew)
+	else:
+	    key, value = ivars.popitem()
+	    l = []
+	    for v in value:
+		dnew = copy.deepcopy(d)
+		dnew[key]=v
+		l.append(self.__array_builder(dnew,copy.deepcopy(ivars)))
+	    return l
+
+    def recursive(self,obj,func):
+        """
+        Recursively applies func to TestCases and returns results
+        """
+        if isinstance(obj,list):
+            results=[]
+            for o in obj:
+                if isinstance(o,list):
+                    results.append(self.recursive(o,func))
                 else:
-                    results = func(obj)
-		return results
+                    results.append(func(o))
+        else:
+            results = func(obj)
+        return results
 
-	# Runs a test case for each value
-	def run(self):
-		self.recursive(self.cases,lambda o: o.run())
+    # Runs a test case for each value
+    def run(self):
+        self.recursive(self.cases,lambda o: o.run())
 
-	# Return results of all test cases by calling recursive function. 
-	def results(self):
-		return self.recursive(self.cases,
-			lambda o: {
-				'vuln': o.vuln,
-				'vars':o.variables,
-				'results':o.results})
+    # Return results of all test cases by calling recursive function. 
+    def results(self):
+        return self.recursive(self.cases,
+            lambda o: {
+                'vuln': o.vuln,
+                'vars':o.config.variables,
+                'results':o.results})
 
-	# Builds and tags images for each target container, outputs dockerfiles
-	def build(self):
-		if not os.path.isdir('build'):
-			os.mkdir('build')
-		self.recursive(self.cases,lambda o: o.build())
+    # Builds and tags images for each target container, outputs dockerfiles
+    def build(self):
+        if not os.path.isdir('build'):
+            os.mkdir('build')
+        self.recursive(self.cases,lambda o: o.build())
