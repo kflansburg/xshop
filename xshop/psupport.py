@@ -58,6 +58,10 @@ class Helper:
         
         return [baseimage, verbs, arguments]
 
+    def copypackages(self, container):
+        if self.config.test_vars['install_type'] == 'debian' and container=='target':
+           subprocess.call(['cp','-p','-r',self.config.packages_path,'.'])
+
     def copysource(self, container):
         """
         Copies the requires source file into the current directory if

@@ -117,6 +117,15 @@ class Config:
         if not 'install_type' in self.test_vars:
             raise exceptions.ConfigError("No install type found!")
 
+        if self.test_vars['install_type']=='debian' and self.target=="":
+            if not 'version' in self.test_vars:
+                raise exceptions.ConfigError("No version for source")
+            if not 'library' in self.test_vars:
+                raise exceptions.ConfigError("No library found for source")
+            self.packages_path = (self.project_directory + 
+                "/packages/%s-%s")%(self.test_vars['library'],
+                    self.test_vars['version'],)
+           
         if self.test_vars['install_type']=='source' and self.target=="":
             if not 'version' in self.test_vars:
                 raise exceptions.ConfigError("No version for source")

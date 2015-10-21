@@ -94,8 +94,8 @@ class TestCase:
     def attach(self,target):
         logging.basicConfig(filename='test.log',level=logging.DEBUG)	
         self.log=logging.getLogger()
-        self.vmanager.launch_test()
         try:
+            self.vmanager.launch_test()
             self.vmanager.attach(target)
         finally:
             self.vmanager.stop_test()

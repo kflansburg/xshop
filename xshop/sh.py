@@ -11,7 +11,6 @@ def run(command, shell=False):
     """
     Run the specified command and log the results.
     """
-    
     process = subprocess.Popen(command, 
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

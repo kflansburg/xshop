@@ -42,6 +42,7 @@ class Provider:
         # Copy Context Files
         self.helper.copycontext(container)
         self.helper.copysource(container)
+        self.helper.copypackages(container)
 
         # Get Dockerfile
         [baseimage,verbs,arguments] = self.helper.read(

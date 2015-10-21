@@ -23,6 +23,7 @@ class Provider:
 
     workdir="~/"
     config=None
+    environment=""
  
     def __init__(self, config): 
         self.config=config
@@ -36,19 +37,12 @@ class Provider:
         """
         # We add WORKDIR functionality by wrapping each command
         # In this bash statement
-        run_command = 'cd '+self.workdir+';sudo %s'%(command,)
+        if not test_function:
+            run_command = 'cd '+self.workdir+';sudo '+command
 
 	if test_function:
    	    run_command=command 
-        result = sh.run(['vagrant','ssh','-c', run_command])
-        if result['return_code'] and not test_function:
-            raise exceptions.ProviderError("Command '%s' returned %d\n%s\n%s"%(
-		command,
-		result['return_code'],
-		result['stdout'],
-		result['stderr'] ))
-
-	return result
+        return sh.run(['vagrant','ssh','-c',run_command])
 
     def __set_workdir(self,workdir):
         """
@@ -74,16 +68,14 @@ class Provider:
         self.__run_command("cp -r /vagrant/%s %s"%(infile, outfile))
     
 
-    def __install_kernel(self,):
+    def __install_kernel(self, version):
         """
         Installs the specified kernel in the vagrant box
         """
-        # Download packages
-    
-        # Dpkg
-    
+        logging.info("Rebooting Into New Kernel %s"%(version,))
+
         # Restart
-        pass
+        sh.run(['vagrant','reload'])
 
     def __run_dockerfile(self,verbs,arguments):
         """
@@ -99,6 +91,8 @@ class Provider:
                 self.__add(argument[0], argument[1])
             elif verb=="WORKDIR":
                 self.__set_workdir(argument)
+            elif verb=="KERNEL":
+                self.__install_kernel(argument)
             else:
                 raise exceptions.ProviderError("Command %s not recognize"%(verb,))
 
@@ -135,7 +129,10 @@ class Provider:
         command = "echo '"
         for var in variables: 
             command += 'export %s="%s"\n'%(var, variables[var])
+            self.environment+='export %s="%s";'%(var,variables[var])
         command +="' >> ~/.bashrc"
+
+        
 
         self.__run_command(command)
 
@@ -162,6 +159,7 @@ class Provider:
         # Copy Context
         self.helper.copycontext(container)
         self.helper.copysource(container)
+        self.helper.copypackages(container)
         self.helper.copytestfiles()
 
         # Start Box
@@ -186,24 +184,29 @@ class Provider:
         participant in the test environment. Should return 
         {'ret':return_ code, 'stdout':stdout}
         """
-        print "Running %s in %s"%(function,container,)
+        logging.info("Running %s in %s"%(function,container,))
 	os.chdir(self.config.containers[container]['alias'])
-        return sh.run(['vagrant','ssh','--','sudo python2 -c "import xshop_test;import sys;sys.exit(xshop_test.%s())"'%(function,)])
+        return sh.run(['vagrant','ssh','--',self.environment+'python -c "import xshop_test;import sys;sys.exit(xshop_test.%s())"'%(function,)])
 
     def __configure_networking(self):
         """
         Adds other container name / IP information to /etc/hosts
         """
         os.chdir(self.config.project_directory+"/"+self.config.build_directory)
-        for c in self.config.containers:
-            d = copy.deepcopy(self.config.containers)
-            alias = d[c]['alias']
+        for c in self.config.compose:
+            d = copy.deepcopy(self.config.compose.keys())
+            alias = self.config.containers[c]['alias']
             os.chdir(alias)
-            d.pop(c, None)
+            d.remove(c)
             command = "echo '"
             for e in d:
-                ip = d[e]['ip']
+                ip = self.config.containers[e]['ip']
                 command += "%s\t%s\n"%(ip, e)
+            
+            if 'remote:' in self.config.target:
+                host = self.config.target.split(":")[1]
+                command+="%s\ttarget\n"%(host,)
+
             command+="' | sudo tee -a /etc/hosts"
             self.__run_command(command)
             os.chdir(self.config.project_directory+"/"+self.config.build_directory)
@@ -222,7 +225,7 @@ class Provider:
 
         # Copy Test Folder to each environment
         os.chdir(self.config.project_directory+"/"+self.config.build_directory)
-        for container in self.config.containers:
+        for container in self.config.compose:
             alias = self.config.containers[container]['alias']
             os.chdir(alias)
             self.__add("test/*","~/")
