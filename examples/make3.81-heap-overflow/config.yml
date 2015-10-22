@@ -1,0 +1,11 @@
+constants:
+  build-dependencies: []
+  dependencies: []
+  library: make
+  install_type: source
+  provider: docker
+variables:
+  version:
+    - 3.81
+notes: |
+  https://www.exploit-db.com/exploits/34164/
