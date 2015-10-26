@@ -33,7 +33,7 @@ def __download(url):
     """
     Downloads a given URL and attempts to verify it.
     """
-    print clr.OLD+"Downloading:\t%s"%(url)+clr.NDC
+    print clr.BOLD+"Downloading:\t%s"%(url)+clr.ENDC
     devnull=open(os.devnull,'w')
     
     # Attempt to download file
@@ -229,6 +229,6 @@ def pull():
     
     try:
         notes = c.config['notes']
-        print clr.KBLUE+notes+clr.ENDC
+        print clr.OKBLUE+notes+clr.ENDC
     except KeyError:
         print clr.KBLUE+"No Notes."+clr.ENDC
