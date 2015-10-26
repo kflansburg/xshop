@@ -1,6 +1,6 @@
 """Provider Support Module
         
-    Provides useful methods for providers to construct the build context. 
+Provides useful methods for providers to construct the build context. 
 """
 
 import os
@@ -20,7 +20,7 @@ class Helper:
 
     def read(self, container, provider):
         """
-        Reads a container's Dockerfile, applies a template and parses the file
+        Reads a container's XShopFile, applies a template and parses the file
         into a list of verbs and list of arguments with no FROM tags. 
         Determines the appropriate FROM tag, and returns this as well. 
         """
@@ -59,6 +59,9 @@ class Helper:
         return [baseimage, verbs, arguments]
 
     def copypackages(self, container):
+        """
+        Copies packages into current folder, if required.
+        """
         if self.config.test_vars['install_type'] == 'debian' and container=='target':
            subprocess.call(['cp','-p','-r',self.config.packages_path,'.'])
 
@@ -72,8 +75,14 @@ class Helper:
 
 
     def copycontext(self, container):
+        """
+        Copies contents of container build context into current folder.
+        """
         context = self.config.containers[container]['build_files_directory']
         subprocess.call('cp -p %s/* .'%(context,),shell=True)
 
     def copytestfiles(self):
+        """
+        Copies contents of test folder into current folder. 
+        """
         subprocess.call(['cp','-r','-p',self.config.test_directory,'.']) 
