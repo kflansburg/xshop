@@ -17,7 +17,8 @@
 #	libc i386
 #
 
-FROM xshop:base_test_image
+FROM_VAGRANT ubuntu/precise64
+FROM_DOCKER xshop:base_test_image
 
 #
 #	This file should completely install the target library. 
@@ -32,8 +33,6 @@ FROM xshop:base_test_image
 #
 
 
-WORKDIR /home/
-
 {% if install_type=="debian" %}
 	#
 	#	For Debians, we install with dpkg, then use APT to 
@@ -41,8 +40,9 @@ WORKDIR /home/
 	#
 	#		packages/{library}-{version}/{library}_{version}-1_amd64.deb
 	#
-    ADD {{ library }}-{{ version }} /home/
-    RUN dpkg -i {{ library }}_{{ version }}-1_amd64.deb
+    RUN mkdir ~/packages
+    ADD {{ library }}-{{ version }} ~/packages/
+    RUN dpkg -i *.deb
     RUN apt-get -y install -f
 
 {% elif install_type=="source" %}
@@ -51,17 +51,18 @@ WORKDIR /home/
 	# 	dependencies mentioned in config.yaml
 	#
 	{% for d in builddeps %}
-	RUN apt-get -y install {{ d }}
+		RUN apt-get -y install {{ d }}
 	{% endfor %}
 
 	#
 	# 	Next, we run a standard autotools installation
 	#
-	ADD {{ library }}-{{ version }}.tar.gz /home/
-	WORKDIR /home/{{ library }}-{{ version }}
-    RUN ./configure --prefix=/usr
-    RUN make
-    RUN make install
+	ADD {{ library }}-{{ version }}.tar.gz ~/
+	WORKDIR ~/{{ library }}-{{ version }}
+    	
+	RUN ./configure --prefix=/usr
+    	RUN make
+    	RUN make install
 
 {% else %}
 	#
@@ -70,6 +71,6 @@ WORKDIR /home/
 	#	You can also add your repository/key here for custom
 	# 	packages. 
 	#
-    RUN apt-get -y install {{ library }}={{ version }}-1
+    	RUN apt-get -y install {{ library }}={{ version }}
 
 {% endif %}
