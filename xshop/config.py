@@ -71,17 +71,11 @@ class Config:
 
         self.project_directory = os.getcwd()
 	self.test_directory = self.project_directory+"/test"
-
         self.variables = variables
-    
         self.target=target
-
         self.config = self.__load_file('config.yml')
-
         self.__verify_parse_config()
-
         self.compose = self.__load_file('docker-compose.yml')
-        
         self.__randomize_container_names()
          
     def __load_file(self, filename):
