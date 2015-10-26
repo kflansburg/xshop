@@ -7,7 +7,7 @@ import random
 import copy
 import logging
 import yaml
-from xshop import colors
+from xshop import colors as clr
 from xshop import exceptions
 from xshop import template
 from xshop import config
@@ -115,9 +115,9 @@ class TestCase:
         
         tb = ""
         try:
-            print (colors.colors.BOLD 
+            print (clr.BOLD 
                 + "Running Test: " 
-                + colors.colors.ENDC
+                + clr.ENDC
                 + str(self.config.variables)+", "),
 
             self.vmanager.launch_test()
@@ -130,18 +130,18 @@ class TestCase:
                 raise Exception("Error Running Test")
             else:
                 if self.vuln:
-                    print (colors.colors.FAIL
+                    print (clr.FAIL
                         + "Vulnerable"
-                        + colors.colors.ENDC)
+                        + clr.ENDC)
                 else:
-                    print (colors.colors.OKGREEN
+                    print (clr.OKGREEN
                         + "Invulnerable"
-                        + colors.colors.ENDC)
+                        + clr.ENDC)
 
                 logging.info("Result: "+str(self.vuln))
 
         except Exception as e:
-            print colors.colors.BOLD+"ERROR!"+colors.colors.ENDC
+            print clr.BOLD+"ERROR!"+clr.ENDC
             self.vuln = None
             tb = traceback.format_exc()
         finally:

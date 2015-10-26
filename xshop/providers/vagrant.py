@@ -8,7 +8,6 @@ from xshop import template
 from xshop import psupport
 from xshop import exceptions
 from xshop import sh
-from xshop import colors
 import os
 import logging
 import re
