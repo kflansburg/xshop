@@ -11,6 +11,7 @@ from xshop import randomname
 import os
 import shutil
 import logging
+import exceptions
 
 class VirtualizationManager:
     """
@@ -18,8 +19,8 @@ class VirtualizationManager:
         
             Provides methods for manipulating the virtual test environment.
     """
+
     def __init__(self, config):
-        # Determine Provider
         self.config = config
         self.provider_name = self.config.test_vars['provider']
     
@@ -29,12 +30,13 @@ class VirtualizationManager:
                 "xshop.providers.%s"%(self.provider_name,))
 	    self.provider = self.provider.Provider(self.config)
         except ImportError as e:
-            print("The provider module %s was not found"%(self.provider_name,))
+            raise exceptions.ProviderError("The provider module %s was not found."%(self.provider_name,))
 
     def launch_test(self):
         """
         Builds each virtual environment and starts the test environment.
         """
+
         # Change into new random directory
         self.config.build_directory = randomname.generate()
         os.mkdir(self.config.build_directory)        
@@ -51,25 +53,25 @@ class VirtualizationManager:
     
         # Launch test environment
         self.provider.launch_test_environment()
-
         os.chdir(self.config.project_directory)
 
     def attach(self,target):
+        """
+        Instruct provider to attach to specified container.
+        """
 	os.chdir(self.config.project_directory+"/"+self.config.build_directory)
 	self.provider.attach(target)
-
 
     def stop_test(self):
         """
         Stops each virtual environment and cleans up temporary files.
         """
         os.chdir(self.config.project_directory+"/"+self.config.build_directory)
-
-        # Stop test environment
         self.provider.stop_test_environment()
 
         # Allow provider to clean up environments
         for container in self.config.containers:
+            logging.info("Destroying %s"%(container,))
             self.provider.destroy_environment(container)
             os.chdir(self.config.project_directory+"/"+self.config.build_directory)
     
@@ -85,4 +87,3 @@ class VirtualizationManager:
 	os.chdir(self.config.project_directory+"/"+self.config.build_directory)
         return self.provider.run_function(container, function)
 	os.chdir(self.config.project_directory+"/"+self.config.build_directory)
-         
