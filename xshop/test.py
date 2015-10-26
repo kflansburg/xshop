@@ -1,5 +1,7 @@
 """
 Test Module
+
+    API for running tests in XShop
 """
 
 import string
@@ -16,37 +18,6 @@ import shutil
 import sys
 import os
 import traceback
-
-class TestRunner:
-    """
-    Object used for executing code inside the test environment.
-    """
-    def __init__(self,vmanager,target):
-        self.target=target
-        self.vmanager = vmanager
-        self.results = []
-        self.vuln=False
-        self.error=False
-
-    def run(self, container, function):
-        """
-        Runs the specified function from xshop_test.py inside the 
-        specified container and keeps the results. 
-        """
-
-        if container=='target' and ('host:' in self.target or 
-            'remote:' in self.target):
-            pass
-        else:
-            result = self.vmanager.run_function(container, function)
-            self.results.append(result)
-            ret = result['return_code']
-            if not ret==0:
-                if ret==2:
-                    self.vuln=True
-                else:
-                    print result
-                    self.error=True
 
 class TestCase:
     """
@@ -76,20 +47,31 @@ class TestCase:
             handler.close()
             self.log.removeHandler(handler)
 
+    def __run_function(self, container, function):
+        """
+        Runs the specified function in the specified container. 
+        """
+        if container=='target' and ('host:' in self.config.target or 
+            'remote:' in self.config.target):
+            pass
+        else:
+            result = self.vmanager.run_function(container, function)
+            self.results.append(result)
+            ret = result['return_code']
+            if not ret==0:
+                if ret==2:
+                    self.vuln=True
+                else:
+                    print result
+                    self.test_error=True
+
     def __call_functions(self):
         """
         Runs xshop_test script to call functions inside test environment.
         """
         sys.path.append(self.config.project_directory+"/test")
         import xshop_test
-        T = TestRunner(self.vmanager, self.config.target)
-        xshop_test.run(T)
-        self.results = T.results
-        if T.error:
-            self.test_error=True
-        else:
-            if T.vuln:
-                self.vuln=True	
+        xshop_test.run(self.__run_function)
     
     def attach(self,target):
         logging.basicConfig(filename='test.log',level=logging.DEBUG)	
@@ -100,7 +82,7 @@ class TestCase:
         finally:
             self.vmanager.stop_test()
             self.__end_logging()
-
+    
     def run(self):
         """
         Start test environment and run test inside, returning the results"
