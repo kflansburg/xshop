@@ -1,7 +1,7 @@
 """
-    Docker Wrapper Module
+Docker Wrapper Module
 
-        Exposes methods for constructing test environments with Vagrant
+Exposes methods for constructing test environments with Vagrant
 """
 
 from xshop import template
@@ -17,11 +17,12 @@ import subprocess
 
 class Provider:
     """
-    Exposes methods for manipulating a Vagrant based virtualized test 
+    Exposes methods for manipulating a Docker based virtualized test 
     environment.
     """
 
     config=None
+    helper=None
  
     def __init__(self, config): 
         

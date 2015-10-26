@@ -8,7 +8,7 @@ from xshop import config
 import re
 from subprocess import call as sh
 import os
-from xshop import colors
+from xshop import colors as clr
 
 def __generate_urls(urls):
     """
@@ -33,16 +33,16 @@ def __download(url):
     """
     Downloads a given URL and attempts to verify it.
     """
-    print colors.colors.BOLD+"Downloading:\t%s"%(url)+colors.colors.ENDC
+    print clr.OLD+"Downloading:\t%s"%(url)+clr.NDC
     devnull=open(os.devnull,'w')
     
     # Attempt to download file
     if sh(['wget','-N',url],stderr=devnull):
-        print colors.colors.FAIL+"FAILED"+colors.colors.ENDC
+        print clr.FAIL+"FAILED"+clr.ENDC
         return 1
     
     else:
-        print colors.colors.OKGREEN+"Success"+colors.colors.ENDC
+        print clr.OKGREEN+"Success"+clr.ENDC
     
         # Attempt to download .asc
         if (sh(['wget',
@@ -61,9 +61,9 @@ def __download(url):
                 stderr=devnull,
                 stdout=devnull)):
             
-            print (colors.colors.WARNING
+            print (clr.WARNING
                     + "No signing file found, looking for hashes."
-                    + colors.colors.ENDC)
+                    + clr.ENDC)
             
             f = url.split('/')[-1]
             folder = '/'.join(url.split('/')[:-1])+"/CHECKSUMS"
@@ -78,14 +78,14 @@ def __download(url):
                     stderr=devnull,
                     stdout=devnull,shell=True)):
                 
-                print (colors.colors.WARNING
+                print (clr.WARNING
                     + "No MD5"
-                    + colors.colors.ENDC)
+                    + clr.ENDC)
             else:
                 
-                print (colors.colors.OKGREEN
+                print (clr.OKGREEN
                         + "MD5 Found!"
-                        + colors.colors.ENDC )
+                        + clr.ENDC )
                 return 3
             
             if sh(['wget',
@@ -93,20 +93,20 @@ def __download(url):
                     url+".sha1"],
                     stderr=devnull,
                     stdout=devnull):
-                print(colors.colors.WARNING
+                print(clr.WARNING
                     + "No SHA1"
-                    + colors.colors.ENDC )
+                    + clr.ENDC )
                 return 5
             else:
-                print (colors.colors.OKGREEN
+                print (clr.OKGREEN
                     + "SHA1 Found!"
-                    + colors.colors.ENDC )
+                    + clr.ENDC )
                 return 4
 
         else:
-            print (colors.colors.OKGREEN
+            print (clr.OKGREEN
                 + "Signing file found!"
-                + colors.colors.ENDC)
+                + clr.ENDC)
             return 0 
 
 def __verify(u):
@@ -128,14 +128,14 @@ def __verify(u):
             stdout=devnull,
             stderr=devnull)):
 
-        print (colors.colors.WARNING
+        print (clr.WARNING
             + "Verification Failed!"
-            + colors.colors.ENDC)
+            + clr.ENDC)
         return 1
     else:
-        print (colors.colors.OKGREEN
+        print (clr.OKGREEN
             + "Verified"
-            + colors.colors.ENDC)
+            + clr.ENDC)
  
 def __check_sha1(u):
     """
@@ -144,14 +144,14 @@ def __check_sha1(u):
 
     f = u.split('/')[-1]+".sha1"
     if sh(['sha1sum','-c',f]):
-        print(colors.colors.WARNING
+        print(clr.WARNING
             + "SHA1 Verification Failed!"
-            + colors.colors.ENDC)
+            + clr.ENDC)
         return 1
     else:
-        print(colors.colors.OKGREEN
+        print(clr.OKGREEN
             + "SHA1 Verified"
-            + colors.colors.ENDC)
+            + clr.ENDC)
 
 def ___check_md5(u):
     """
@@ -161,21 +161,21 @@ def ___check_md5(u):
     f = u.split('/')[-1]+".md5"
 
     if sh(['md5sum','-c',f]):
-        print(colors.colors.WARNING
+        print(clr.WARNING
             + "MD5 Verification Failed!"
-            + colors.colors.ENDC)
+            + clr.ENDC)
         return 1
     else:
-        print(colors.colors.OKGREEN
+        print(clr.OKGREEN
             + "MD5 Verified"
-            + colors.colors.ENDC)
+            + clr.ENDC)
 
 def pull():
     """
     Pulls files associated with a given project.
     """
 
-    c = config.Config({'version':'blah'},None)
+    c = config.Config({'version':'blah'})
 
     urls = c.config['source']
     print "Source URLS:"
@@ -185,9 +185,9 @@ def pull():
     try:
         keys = c.config['public_keys']
         print "Public Keys:"
-        print(colors.colors.WARNING
+        print(clr.WARNING
             + "THESE MUST BE ADDED MANUALLY"
-            + colors.colors.ENDC)
+            + clr.ENDC)
 	print "gpg  --keyserver pgp.mit.edu --send-keys <key-id>"
         for k in c.config['public_keys']:
             print k
@@ -219,16 +219,16 @@ def pull():
     
 
     if failed:
-        print(colors.colors.FAIL
+        print(clr.FAIL
             + "One or more files could not be retrieved!"
-            + colors.colors.ENDC)
+            + clr.ENDC)
     if verifyfail:
-        print(colors.colors.WARNING
+        print(clr.WARNING
             + "One or more of the file verifications failed!"
-            + colors.colors.ENDC)
+            + clr.ENDC)
     
     try:
         notes = c.config['notes']
-        print colors.colors.OKBLUE+notes+colors.colors.ENDC
+        print clr.KBLUE+notes+clr.ENDC
     except KeyError:
-        print colors.colors.OKBLUE+"No Notes."+colors.colors.ENDC
+        print clr.KBLUE+"No Notes."+clr.ENDC

@@ -67,7 +67,7 @@ class Config:
 
     target=None
 
-    def __init__(self, variables, target):
+    def __init__(self, variables, target=""):
 
         self.project_directory = os.getcwd()
 	self.test_directory = self.project_directory+"/test"
