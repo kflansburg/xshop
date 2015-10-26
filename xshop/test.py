@@ -4,17 +4,13 @@ Test Module
     API for running tests in XShop
 """
 
-import string
-import random
 import copy
 import logging
-import yaml
 from xshop import colors as clr
 from xshop import exceptions
 from xshop import template
 from xshop import config
 from xshop import vmanager
-import shutil
 import sys
 import os
 import traceback
@@ -25,38 +21,40 @@ class TestCase:
     It exposes methods for running the test and collecting results.
     """
 
+    log=None
+    results=[]
+    vuln=None
+    config=None
+    vmanager=None
+
     def __init__(self,variables,target=""):
         """
-        Initialize TestCase object with variable values and an optional
-        instruction to replace the target container with either a 
-        remote host or specified prebuilt container. 
+        Initialize TestCase object with dictionary of variable values, 
+        and an optional override to the target variable:
+            "remote:[hostname]"
+            "image:[imagename]"
         """
 
         self.config = config.Config(variables, target)
         self.vmanager = vmanager.VirtualizationManager(self.config)
 
-        # Initialize Result Values
-        self.vuln=None
-        self.results=[]
-
     def __end_logging(self):
-        """
-        Clean up logging
-        """
         for handler in self.log.handlers[:]:
             handler.close()
             self.log.removeHandler(handler)
 
     def __run_function(self, container, function):
         """
-        Runs the specified function in the specified container. 
+        Runs the specified function in the specified container.
+        We pass this to the user in xshop_test.py.run()
+        so that they may script the test procedure.  
         """
-        if container=='target' and ('host:' in self.config.target or 
-            'remote:' in self.config.target):
-            pass
-        else:
+
+        # Dont try to run function in remote target
+        if not (container=='target' and 'remote:' in self.config.target):
             result = self.vmanager.run_function(container, function)
             self.results.append(result)
+
             ret = result['return_code']
             if not ret==0:
                 if ret==2:
@@ -65,15 +63,11 @@ class TestCase:
                     print result
                     self.test_error=True
 
-    def __call_functions(self):
-        """
-        Runs xshop_test script to call functions inside test environment.
-        """
-        sys.path.append(self.config.project_directory+"/test")
-        import xshop_test
-        xshop_test.run(self.__run_function)
-    
     def attach(self,target):
+        """
+        Starts the test environment, and attaches a shell to the 
+        given container.
+        """
         logging.basicConfig(filename='test.log',level=logging.DEBUG)	
         self.log=logging.getLogger()
         try:
@@ -106,7 +100,9 @@ class TestCase:
 
             logging.info("Running Functions in Test Environment.")
 
-            self.__call_functions()
+            sys.path.append(self.config.project_directory+"/test")
+            import xshop_test
+            xshop_test.run(self.__run_function)
     
             if self.test_error:
                 raise Exception("Error Running Test")
@@ -139,6 +135,9 @@ class Trial:
     Manages variables in an experiment.
     """
 
+    ivars={}
+    cases=[]
+
     def __init__(self,ivars):
         """
         Accepts ivars and source and saves them as instance variables
@@ -165,7 +164,7 @@ class Trial:
 		l.append(self.__array_builder(dnew,copy.deepcopy(ivars)))
 	    return l
 
-    def recursive(self,obj,func):
+    def __recursive(self,obj,func):
         """
         Recursively applies func to TestCases and returns results
         """
@@ -180,20 +179,19 @@ class Trial:
             results = func(obj)
         return results
 
-    # Runs a test case for each value
     def run(self):
-        self.recursive(self.cases,lambda o: o.run())
+        """
+        Runs each TestCase and stores results.
+        """
+        self.__recursive(self.cases,lambda o: o.run())
 
-    # Return results of all test cases by calling recursive function. 
     def results(self):
-        return self.recursive(self.cases,
+        """
+        Returns array of test results for each variable combination. 
+        Should be used after Trial.run()
+        """
+        return self.__recursive(self.cases,
             lambda o: {
                 'vuln': o.vuln,
                 'vars':o.config.variables,
                 'results':o.results})
-
-    # Builds and tags images for each target container, outputs dockerfiles
-    def build(self):
-        if not os.path.isdir('build'):
-            os.mkdir('build')
-        self.recursive(self.cases,lambda o: o.build())
