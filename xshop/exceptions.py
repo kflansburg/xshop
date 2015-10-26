@@ -1,40 +1,23 @@
-#
-#	exceptions
-#
-#		This module provides more descriptive custom exceptions.
-#
+"""
+    Exceptions Module
+        
+        Custom exceptions used by XShop
+"""
 
-#
-#	Thrown when the docker daemon reports an error with a command
-#
 class ProviderError(Exception):
+        """
+        Thrown when an error occours manupulating the virtualized test 
+        environment. 
+        """
 	def __init__(self, value):
 		self.value = value
 	def __str__(self):
 		return repr(self.value)
 
-#
-#	Thrown when the build fails
-#
-class BuildError(Exception):
-	def __init__(self, value):
-		self.value = value
-	def __str__(self):
-		return repr(self.value)
-
-#
-#	Thrown when lintian returns errors
-#
-class LintianError(Exception):
-	def __init__(self, value):
-		self.value = value
-	def __str__(self):
-		return repr(self.value)
-
-#
-#	Thrown when config file not found
-#
 class ConfigError(Exception):
+        """
+        Thrown with the configuration file is inaccessible or malformed. 
+        """
 	def __init__(self, value):
 		self.value = value
 	def __str__(self):
