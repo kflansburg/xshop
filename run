@@ -1,10 +1,12 @@
 #!/usr/bin/python2.7
 
+from subprocess import call
 from xshop import new
 from xshop import config
 from xshop import test
-import sys
 from xshop import pull
+import sys
+import os
 
 if sys.argv[1] =='new':
     if len(sys.argv)<4 or len(sys.argv)>4:
@@ -37,6 +39,12 @@ elif sys.argv[1]=='attach':
             print variables
             T = test.TestCase(variables)
             T.attach(container)
+
+elif sys.argv[1]=='build_image':
+	image = sys.argv[2]
+	xshop_path = os.path.dirname(os.path.realpath(test.__file__))
+	dockerfilepath=xshop_path+'/defaults/contexts/%s/'%(image,)
+	call(['docker','build','-t',image,dockerfilepath])
 
 elif sys.argv[1]=='pull':
         pull.pull()
