@@ -2,13 +2,17 @@
 
 set -e
 
-echo "You must have docker installed and be in docker group."
-echo "If you do not, run:"
-echo "	wget -qO- https://get.docker.com/ | sh"
-echo "	sudo usermod -aG docker <your_user_name>"
-echo "And then log out and back in."
-echo "Checking: "
-sudo -H -u $SUDO_USER bash -c 'docker info'
+#echo "You must have docker installed and be in docker group."
+#echo "If you do not, run:"
+#echo "	wget -qO- https://get.docker.com/ | sh"
+#echo "	sudo usermod -aG docker <your_user_name>"
+#echo "And then log out and back in."
+#echo "Checking: "
+#sudo -H -u $SUDO_USER bash -c 'docker info'
+
+#echo "Check that Vagrant is Installed"
+#vagrant version 
+
 echo
 echo "Make sure pip is installed:"
 apt-get -y install python-pip
@@ -33,7 +37,7 @@ cp run /usr/bin/xshop
 
 
 echo "Building base_test_image"
-xshop build_image base_test_image
+#xshop build_image base_test_image
 echo "Done!"
 
 
