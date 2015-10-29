@@ -48,7 +48,7 @@ class VirtualizationManager:
             if not (container=='target' and 
                 ('remote:' in self.config.target or 
                 'image:' in self.config.target)):
-                self.provider.build_environment(container)
+		self.provider.build_environment(container)
                 os.chdir(self.config.project_directory+"/"+self.config.build_directory)
     
         # Launch test environment
