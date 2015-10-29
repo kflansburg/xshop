@@ -172,7 +172,7 @@ class Trial:
             results=[]
             for o in obj:
                 if isinstance(o,list):
-                    results.append(self.recursive(o,func))
+                    results.append(self.__recursive(o,func))
                 else:
                     results.append(func(o))
         else:
