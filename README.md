@@ -59,14 +59,29 @@ is implemented using Jinja2, and as such control flow and loops are also
 supported. 
 
 
-For example, the dafault XShopFile for installing a library that is available 
-in a repository is: 
+For example, the dafault XShopFile for installing OpenSSL is:
 
 ```
 FROM xshop:base_test_image
-FROM_VAGRANT ubuntu:precise64
+VAGRANT_FROM ubuntu/precise64
 
-RUN apt-get -y install {{ library }}={{ version }}
+{% if install_type=="debian" %}
+    RUN mkdir ~/packages
+    ADD {{ library }}-{{ version }} ~/packages/
+    RUN dpkg -i ~/packages/*.deb
+    RUN apt-get -y install -f
+
+{% elif install_type=='source' %}
+    ADD {{ library }}-{{ version }}.tar.gz ~/
+    WORKDIR ~/{{ library }}-{{ version }}/
+    RUN ./config --prefix=/usr
+    RUN make
+    RUN make install_sw
+
+{% else %}
+    RUN apt-get -y install {{ library }}={{ version }}
+
+{% endif %}
 ```
 
 Keep in mind that Docker caches consecutive builds up until a new command is 
