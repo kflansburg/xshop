@@ -188,13 +188,9 @@ target:
 
 Here users can place packages for the library that should be installed. XShop 
 automatically copies all files from `packages/[library]-[version]` into the
-build context. From here, the user can simply run in the XShopFile:
-
-```
-ADD *.deb .
-RUN dpkg -i *.deb
-```
-
+build context. From here the user can simply copy and install them during
+build. 
+ 
 ### source
 
 Much like the packages directory, the user can place source tarballs in this
