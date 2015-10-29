@@ -43,7 +43,7 @@ class Helper:
         arguments = map(lambda l: l[1], dockerfile) 
 
         # Determine FROM
-        providerfrom = provider.upper()+"_FROM"
+        providerfrom = "FROM_"+provider.upper()
         baseimage=None
         if "FROM" in verbs:
             baseimage = arguments[verbs.index('FROM')]
@@ -79,7 +79,7 @@ class Helper:
         Copies contents of container build context into current folder.
         """
         context = self.config.containers[container]['build_files_directory']
-        subprocess.call('cp -p %s/* .'%(context,),shell=True)
+        subprocess.call('cp -r -p %s/* .'%(context,),shell=True)
 
     def copytestfiles(self):
         """
