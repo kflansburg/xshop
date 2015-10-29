@@ -1,14 +1,14 @@
 """
 Pull Module
 
-    Automatic downloading of source files based on config.yaml
+Automatic downloading of source files based on config.yaml
 """
 
+from subprocess import call as sh
+from xshop import colors as clr
 from xshop import config
 import re
-from subprocess import call as sh
 import os
-from xshop import colors as clr
 
 def __generate_urls(urls):
     """
