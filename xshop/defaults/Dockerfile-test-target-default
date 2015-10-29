@@ -50,7 +50,7 @@ FROM_DOCKER xshop:base_test_image
 	#	For installation from source, we first install 
 	# 	dependencies mentioned in config.yaml
 	#
-	{% for d in builddeps %}
+	{% for d in build_dependencies %}
 		RUN apt-get -y install {{ d }}
 	{% endfor %}
 
