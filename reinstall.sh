@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Copies XShop module and command line utility, without any dependencies. 
+
 set -e
 
 echo "Installing xshop:"

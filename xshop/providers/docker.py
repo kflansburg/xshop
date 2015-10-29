@@ -82,7 +82,7 @@ class Provider:
         """
         alias = self.config.containers[container]['alias']
         if container=='target' and 'image:' in self.config.target:
-            image = self.config.target.split(":")[1]
+            image = ':'.join(self.config.target.split(":")[1:])
             alias = image
 
         os.mkdir(container)
@@ -121,6 +121,7 @@ class Provider:
         
                 
             # Set Environment
+            compose[container]['environment']={}
             for k,v in self.config.test_vars.iteritems():
                 compose[container]['environment'][k]=v
             compose[container]['environment']['container_name'] = container

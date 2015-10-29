@@ -185,7 +185,7 @@ class Provider:
         """
         logging.info("Running %s in %s"%(function,container,))
 	os.chdir(self.config.containers[container]['alias'])
-        return sh.run(['vagrant','ssh','--',self.environment+'python -c "import xshop_test;import sys;sys.exit(xshop_test.%s())"'%(function,)])
+        return sh.run(['vagrant','ssh','--',self.environment+'python2 -c "import xshop_test;import sys;sys.exit(xshop_test.%s())"'%(function,)])
 
     def __configure_networking(self):
         """
@@ -215,6 +215,21 @@ class Provider:
         os.chdir(alias)
         subprocess.call(['vagrant','ssh'])                  
 
+    def __launch_target_image(self):
+        box = self.config.target.split(":")[1]
+        alias = self.config.containers['target']['alias']
+        os.mkdir(alias)
+        os.chdir(alias)
+        sh.run(['vagrant','init',box])
+        self.__write_vagrantfile(box)
+        self.helper.copytestfiles()
+        sh.run(['vagrant','up'])
+        ip = self.__fetch_ip()
+        logging.info("IP FOUND %s"%( ip))
+        self.config.containers['target']['ip']=ip
+        self.__set_environment('target')
+       
+
     def launch_test_environment(self):
         """
         Launches the full test environment, based on information in 
@@ -222,6 +237,9 @@ class Provider:
         """	
         logging.info("Launching environment")
 
+        if 'image:' in self.config.target:
+            self.__launch_target_image()         
+   
         # Copy Test Folder to each environment
         os.chdir(self.config.project_directory+"/"+self.config.build_directory)
         for container in self.config.compose:
