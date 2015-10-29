@@ -2,249 +2,297 @@
 
 ## General Installation
 
-To install, install docker first and add user to docker group, make sure you can run:
-```
-docker info
-```
+XShop requires a virtualization provider, either Docker or Vagrant. Vagrant is
+required for testing kernel vulnerabilities, due to limitations of container
+virtualization. XShop requires that you can run Docker without `sudo`. 
 
-Then run from the xshop source directory: 
+Then run from the XShop source directory: 
 ```
 ./install.sh
 ```
 
-This:
+This installs all Python dependencies, the XShop library, and command line 
+utility. 
 
-* Copies module to /usr/lib/python2.7/xshop
-* Copies command line tool to /usr/bin/xshop
-* Installs pip, jinja2, docker-py, docker-compose
-* Builds base image
+When using Docker, you will want to build test environments from an image which
+includes some software that is not included in typical distribution images 
+(such as Python). To build these base images, run:
 
-## Goals
+```
+xshop build_image [image_name]
+```
+
+* `base_test_image`: installs Python, GCC, Clang, and Make on top of Debian Jessie. 
+* `clang38`: builds the latest Clang from source on Debian Jessie. 
+
+Tests using Vagrant can typically begin from a stock distribution box. 
+
+
+## Project Goals
 
 * Expand CVE metadata
-* Develop a toolkit for managing automated testing of libraries and their vulnerabilites. For example:
+* Develop a toolkit for managing automated testing of libraries and their vulnerabilities. For example:
     * Test a new release of a library against all of its known vulnerabilities
     * Test new vulnerability against all versions of a library to measure impact and detect when the bug was introduced
-    * Produce a list of known vulnerbilites that a given system or docker image is suceptible to
+    * Produce a list of known vulnerabilities that a given system or docker image is susceptible to
     * Experiment to see if compiler flags or wrapper can patch vulnerability
 * Develop infrastructure to provide a number of services to facilitate research:
-    * Track suceptibility of library versions vs. their known vulnerabilities
+    * Track susceptibility of library versions vs. their known vulnerabilities
     * Keep instructions for compiling old library versions
     * Provide community website for discussion and experimentation
 
 ## Template System
 
-### File Templating
+### XShopFile
 
-To make files easier to author for general cases, a template system is used to populate files with parameters specific to a given build before the build is run. This template is applied to the entire build context of each container. 
+XShop draws inspiration from the Dockerfile format to allow exploit authors to
+specify how test environments are built. From Dockerfile, XShop supports four
+verbs, `ADD`, `RUN`, `FROM`, `WORKDIR`. Additionally, it supports 
+`KERNEL [version]`, which instructs XShop to reboot the environment into the
+newly installed kernel version. Finally, authors may specify `FROM_[PROVIDER]`, 
+to support multiple providers with different starting image names. 
 
-For example, the dafault Dockerfile for installing a library that is available in a repository is: 
+The most powerful feature of the XShopFile is the ability to support
+templating, which allows the author to specifies the ways in which variation
+can be introduced into the build process in a controlled manner. Templating
+is implemented using Jinja2, and as such control flow and loops are also
+supported. 
+
+
+For example, the dafault XShopFile for installing a library that is available 
+in a repository is: 
 
 ```
 FROM xshop:base_test_image
+FROM_VAGRANT ubuntu:precise64
 
-RUN apt-get -y install {{ library }}={{ version }}-1
+RUN apt-get -y install {{ library }}={{ version }}
 ```
 
-The templating system will substitute values in for the library and version being built. The template system is implemented using Jinja2. As such, you can use its control flow and looping. As an example in a Dockerfile:
-
-```
-RUN apt-get update
-{% for pack in deps %}
-RUN apt-get -y install {{ pack }}
-{% endfor %}
-```
-
-Keep in mind that Docker caches consecutive builds up until a new Dockerfile command is found, so try to keep as much of the file the same as possible for different variables, with differing commands placed at the end of the file. 
+Keep in mind that Docker caches consecutive builds up until a new command is 
+found, so try to keep as much of the file the same as possible for different 
+variables, with differing commands placed at the end of the file. Vagrant
+does not support caching, and is much slower in general. 
 
 ## Project Layout
 
-A project is intended to describe a particular CVE and test it against a single library. Many different experiments can be run to see how the CVE is affected by different situations. The folder hierarchy is as follows:
+A project is intended to describe a particular CVE and test it against a single
+library. Many different experiments can be run to see how the CVE is affected 
+by different situations. The folder hierarchy is as follows:
 
 ```
 PROJECT_NAME
 |- config.yaml
-|- docker-compose.yml
+|- test-environment.yml
 |- packages
 |- source
 |- containers	
 |  |- target
-|  |  |- Dockerfile
+|  |  |- XShopFile
 |  |- attacker
-|  |  |- Dockerfile
+|  |  |- XShopFile
 |- test				
-|  |- xshop_test.py	
-|- build
+|  |- xshop_test.py
 ```
 
-`config.yaml` stores project constants like library name.
+A project is created by running `xshop new [library] [folder]`. The folder
+name is arbitrary, but the library name is used for manipulating source files
+(e.g. <library>-<version>.tar.gz). 
 
-`docker-compose.yml` is used to describe the scenario involved in the exploit including each container and how they are connected. As an example you can set up two communicating containers and perform a MitM attack, a container providing a perticular service and an attacker (used in this Heartbleed example), or a standalone container to check privilege escalation attacks. 
+### Config.yml
 
-`packages` is where users can place `.deb` packages to quickly install prebuilt versions of the library.
-
-`source` is where users can place source tarballs.
-
-xshop automatically copies the correct source/package version into the build context of the target as long as it follows the proper naming convention:
+Stores the project configuration. Here is the file used for Heartbleed:
 
 ```
-[library]-[version].tar.gz
-```
-for source. 
-```
-[library]-[version]
-|- [library]_[version]-1_amd64.deb
-```
-for debian. 
-
-The `containers` directory holds the build context for each player in the test. Say you want additional files to be available to add when building a container, place them in the folder for that container.
-
-The contents of the `test` directory is copied into every container at `/home/`. The hook `run_exploit()` in `xshop_test.py` is where you should perform your exploit. A return code of `2` indicates the exploit succeeded, `0` indicates it failed, and any other nonzero code is considered an error. 
-
-
-## Usage
-
-### Test Projects
-
-#### Creating a Project
-Start a new project ( as an example we will use the Heartbleed bug ):
-
-```
-xshop new openssl Heartbleed
+constants:
+  build-dependencies: []
+  dependencies: []
+  library: openssl
+  install_type: source
+  provider: docker
+variables:
+  version:
+    - 1.0.1f
+    - 1.0.1g
+source:
+  - "http://openssl.org/source/old/1.0.0/openssl-1.0.0r.tar.gz"
+  - "http://openssl.org/source/old/1.0.1/openssl-{1.0.1a,1.0.1f,1.0.1g}.tar.gz"
+public_keys:
+  - "F295C759"
+  - "0E604491"
+notes: |
+    Files are signed with F295C759 and
+    0E604491, however these keys are
+    PGP-2 and GPG will not import.
 ```
 
-The general format is `xshop new [target library] [project name]`. The project name doesn't matter and is for personal organization. The target library should be what is used to name the source tarballs. 
+`constants` specify the isolation provider (Vagrant or Docker), library, any
+other values that should be present in the build and test environment, and
+installation type (source, packages, remote). Source and packages types will
+attempt to copy source tarballs from `source/<library>-<version>/` or Debian 
+packages from `packages/<library>-<version>/` respectively during build. 
 
-In the test folder, I place a python script whose main() function performs the attack and returns 2 for success and 0 for failure. In `xshop_test.py`: 
+`variables` specifies the basic test to demonstrate the proof of concept (i.e.
+`1.0.1f` is vulnerable, `1.0.1g` is not). This is run with `xshop test`. 
+
+`source` specifies URLs where XShop can aquire files needed for the test. XShop
+automatically expands tuples ({1.0,2.0,3.0}) into multiple URLs and downloads
+each. These files can be downloaded by `xshop pull`. 
+
+`public_keys` allows the author to note which keys the files are signed with. 
+
+`notes` are printed after `xshop pull` downloads the files to notify the user
+of any idiosyncrasies. 
+
+
+### test-environment.yml
+
+Used to describe the scenario involved in the exploit, including each container
+and how they are connected. As an example you can set up two communicating 
+containers and perform a MitM attack, a container providing a particular 
+service and an attacker (used in this Heartbleed example), or a standalone 
+container to check privilege escalation attacks. Here is the typical
+file for a server-client attack environment such as Heartbleed:
 
 ```
-import os
+attacker:
+  build: attacker/
+  links:
+    - target 
+  command: /bin/bash -c "while true; do sleep .1; done"
+  environment:
+    CONTAINER_NAME: attacker
+target:
+  build: target/
+  environment:
+    CONTAINER_NAME: target
+  command: /bin/bash -c "while true; do sleep .1; done"
+```
+
+### packages
+
+Here users can place packages for the library that should be installed. XShop 
+automatically copies all files from `packages/<library>-<version>` into the
+build context. From here, the user can simply run in the XShopFile:
+
+```
+ADD *.deb .
+RUN dpkg -i *.deb
+```
+
+### source
+
+Much like the packages directory, the user can place source tarballs in this
+directory. XShop automatically copies `<library>-<version>.tar.gz` into the
+build context and the user can install from the XShopFile by copying in the
+tarball. Note that Docker/Vagrant automatically decompress the archive. 
+
+### containers
+
+This holds the build context for each container, including XShopFile and any 
+other files which may be needed during build. 
+
+### test
+
+This directory holds any files needed during testing. It also holds the 
+`xshop_test.py` script for describing the test procedure. 
+
+This script allows the user to run functions within the test environment. The 
+user should write the functions to return `2` if there is exploit success and 
+`0` if the exploit fails or the function is only a helper function. If any 
+function returns `2`, the XShop considers the exploit a success. If any 
+function returns non-zero other than `2`, then XShop considers this an error 
+and aborts the test. Here is an example script for Heartbleed, the actual
+Heartbleed exploit is in the `heartbleed` module and has been modified to
+return the needed values:
+
+```
 import heartbleed
+import subprocess
+import os
+import time
+
+def run(run_function):
+    run_function('target','start_server')
+    time.sleep(5)
+    run_function('attacker','run_exploit')
+
+def start_server():
+    subprocess.Popen(["openssl"
+        " s_server"
+        " -key"
+        " server.key"
+        " -cert"
+        " server.cert5"
+        " -accept"
+        " 443"
+        " -www"], 
+        stdout=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=True)
+    return 0
 
 def run_exploit():
-	if os.environ['CONTAINER_NAME']=='attacker':
-		return heartbleed.main()
-	return 0
+    return heartbleed.main()
 ```
 
-Note that each container has an environment variable `CONTAINER_NAME` containing the name assigned to it in the docker-compose.yml file. This allows only executing code on one container and returning 0 for the rest. The results of the test are considered to be the OR of the return codes of the hooks run in each container, so every container not actually performing the exploit should return 0. 
+## Testing Kernels
 
-The attacker container should be configured properly because xshop will copy in the test folder and run the exploit hook. We need to set up the target to make sure the library is installed properly. Here we have several options: installing from a repository, installing from a Debian package, installing from source. I will discuss each. 
+When testing kernels, you must use Vagrant. The installation of the new kernel
+proceeds just like any other project. The library name for the project is 
+simply set to `linux-image`, and the kernel packages are placed in 
+`packages/linux-image-<version>/`. To avoid building your own kernel packages
+for the test, you can use Ubuntu boxes, and source kernel packages from 
+[Ubuntu Kernel Mainline](http://kernel.ubuntu.com/~kernel-ppa/mainline/). 
 
-Note that the responsibilty of properly installing the library is left to the user because it varies wildly by library. The Dockerfile in `containers/target/Dockerfile` contains sane defaults for performing this installation, familiarize yourself with what this does. 
+For a reliable installation method, it is recommended to place 
+`linux-headers-*_amd64.deb`, `linux-headers-*_all.deb`, and 
+`linux-image-*_amd64.deb` into the `packages/linux-image-<version>/` folder so
+that all are installed together. Upgrading kernels can be tricky because of 
+VirtualBox Guest additions. It is recommended to install the Vagrant 
+`vagrant-vbguest` plugin to mitigate this. 
 
-#### Repository
-If the library and version to be tested is in a repository that is tracked by the container, it is easy to simply provide the information to apt and install this way. One of the goals of this project is to provide a repository of legacy versions prebuilt for debian:stable, #TODO link to list of libraries. 
+It is typically easiest to begin with a box that has a kernel version before 
+the version you wish to test, so that when you upgrade it will automatically 
+reboot into the newer version. Otherwise, you may need to modify `grub.cfg` 
+during the build process. Keep in mind, however, that if the box is
+too old, newer kernels will not install smoothly. 
 
-Additionally if you wish to provide your own repo, say one produced by an xshop build project, you should modify the target Dockerfile to import your signing public key and add the repository to the sources list. #TODO more here. 
+It can be difficult to find boxes for these older versions, although 
+[vagrantbox.es](http://www.vagrantbox.es) can be useful. Keep in mind that it 
+is difficult to know how these boxes were configured and you may wish to make 
+your own. 
 
-In the Dockerfile, notice that for `install_type==remote`, it simply tries to install from apt and substitute in the version for that test. 
+**Test boxes must have `python2` symlinked to the Python 2 executable.**
 
-#### Debian
-If you have a Debian package, include it in `packages` directory as listed above
+For a better idea of the procedure, take a look at the kernel exploit examples
+such as Full Nelson.
 
-At build time, xshop copies this package directory into the build context. In the Dockerfile it copies this into the container and runs dpkg to install and apt to satisfy dependencies mentioned in the package.
+## Attaching
 
-#### Source
-If you have a source tarball, place it in the target build context. You will most likely have to modify the target Dockerfile to get this to compile, in the case of OpenSSL we must run `./config prefix=/usr` instead of `./Configure` and `make install_sw` intead of `make install`. 
+To inspect the test environment, it must be able to properly build. The user
+can the run `xshop attach [variable1=value1] [variable2=value2] target` to 
+launch the environment with the specified variable values and attach a shell
+to the specified container. This can be useful for debugging the actual exploit
+on particularly slow test environment launches. 
 
-Note that the Dockerfile shows the usage of the template system to select which commands to pass to Docker based on `install_type`. Other variables available to you are `library`, `version`, `build_deps`, `deps`, as well as any independent variable in your test. You can use these variables to splice into commands (for instance the apt-get install used for repository install), or you can use them for additional if statement based control. An example of this would be modifying the commands for compilation for very old versions. 
-
-At build time, xshop copies the tarball into the build context. The default Dockerfile copies this in and then attempts to install it with the default autotools install process. 
-
-#### Running
-Next, to run a test. Here is my folder layout:
-```
-├── build
-├── config.yaml
-├── containers
-│   ├── attacker
-│   │   └── Dockerfile
-│   └── target
-│       ├── Dockerfile
-│       ├── server.cert5
-│       └── server.key
-├── docker-compose.yml
-├── packages
-│   ├── openssl-1.0.1a
-│   │   └── openssl_1.0.1a-1_amd64.deb
-│   └── openssl-1.0.1g
-│       └── openssl_1.0.1g-1_amd64.deb
-├── source
-│   ├── openssl-1.0.1a.tar.gz
-│   └── openssl-1.0.1g.tar.gz
-└── test
-    ├── heartbleed.py
-    └── xshop_test.py
-
-9 directories, 12 files
-```
-
-Note that I have Debian packages for versions `1.0.1a` and `1.0.1g`, as well as source for `1.0.1a` and `1.0.1g`. In the repo, I have `1.0.1a` and `1.0.1g`. For Heartbleed, `1.0.1f` was the last vulnerable version. 
-
-I have also pre-generated certificates for the target server to use and placed them in the target build context, in the target Dockerfile I add these files to make them available to the test server:
-
-```
-ADD server.key /home/
-ADD server.cert5 /home/
-```
-
-In the docker-compose.yml file, I change the run command for the target to:
-``` 
-/bin/bash -c 'openssl s_server -key server.key -cert server.cert5 -accept 443 -www'
-```
-
-This starts a basic ssl server in the target container.
-
-Tests should be run from the root of the project directory. To run the test and install from the repository: 
-
-```
-projects/Heartbleed [ xshop test remote 1.0.1a
-Running Test: {'version': '1.0.1a'},  Vulnerable
-projects/Heartbleed [ xshop test remote 1.0.1g
-Running Test: {'version': '1.0.1g'},  Invulnerable
-```
-
-Great! The tests confirm other's results with Heartbleed. You might notice that there is very little output. All output, including Docker build output, compilation output, and hook script output is routed to `test.log` in the root of the project folder, which can be monitored with `tail -f test.log`. This is most useful for compilation tests which take some time. In my case, for `1.0.1a`, I find that my script printed out the memory dumped from the vulnerable `1.0.1a` server:
-
-```
-.@....SC[...r....+..H...9...
-....w.3....f...
-...!.9.8.........5...............
-.........3.2.....E.D...../...A.................................I.........
-...........
-...................................#
-```
-
-and for `1.0.1g` I find indication that the target server is not vulnerable:
-
-```
-Error Receiving Record! timed out
-No heartbeat response received, server likely not vulnerable
-```
-
-Tests installing from source and Debians are performed similarly:
-
-```
-projects/Heartbleed [ xshop test source 1.0.1a
-Running Test: {'version': '1.0.1a'},  Vulnerable
-projects/Heartbleed [ xshop test debian 1.0.1g
-Running Test: {'version': '1.0.1g'},  Invulnerable
-```
-
-
-### API
+## API
 
 Another option for running more complicated tests is to use the test module API. 
 
 This exposes two classes, `TestCase` and `Trial`. 
 
-`TestCase` wraps a fixed set of variables and the method to run a test with those variables. 
+`TestCase` wraps a fixed set of variables and the method to run a test with 
+those variables. 
 
-`Trial` allows you to define multiple independent variables and run all of those tests, returning the results in a multidimensional array. 
+`Trial` allows you to define multiple independent variables and run all of 
+those tests, returning the results in a multidimensional array. 
 
 
-Here is an example for Heartbleed, we modify the target Dockerfile to utilize Clang 3.8, allowing us to test some new features.
+Here is an example for Heartbleed, we modify the target XShopFile to utilize 
+Clang 3.8, allowing us to test some new features. If you have not already, 
+you should build this base image. 
 
 
 ```
@@ -254,12 +302,11 @@ Here is an example for Heartbleed, we modify the target Dockerfile to utilize Cl
 ...
 -RUN make
 +RUN make CC=clang CXX=clang++ CFLAG+="{{ cflag }}"
-
 ```
 
-This presents two variables now to use: `version` and `cflag`. 
+This presents two hooks now to use within the build process, `version` and `cflag`. 
 
-I will now write a script to define a test with the xshop API:
+Now, write a script to define a test with the XShop API:
 
 ```
 #!/usr/bin/python2.7
@@ -267,31 +314,17 @@ from xshop import test
 
 var = {'version':
 		['1.0.1a','1.0.1g'],
-		'cflag':
+	'cflag':
 		['','-fsanitize=address']}
 
-source = 'source'
-
-T = test.Trial(var,source)
+T = test.Trial(var)
 
 T.run()
 print T.results()
 ```
 
-`xshop:clang38` is a default container provided by xshop. (These are locates in `xshop/defaults/contexts`). This pulls the latest version of Clang from the llvm subversion repository, and builds it. This takes a few minutes. To build you can run in a python interpreter:
-
-
-```
-~/xshop [ python                           
-Python 2.7.6 (default, Jun 22 2015, 17:58:13) 
-[GCC 4.8.2] on linux2
-Type "help", "copyright", "credits" or "license" for more information.
->>> from xshop import dockerw
->>> dockerw.build_image('clang38')
->>> 
-```
-
 And run the test. I have formated the results for better legibility:
+
 ```
 projects/Heartbleed [ ./run
 Running Test: {'version': '1.0.1a', 'cflag': ''},  Vulnerable
