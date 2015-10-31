@@ -59,14 +59,29 @@ is implemented using Jinja2, and as such control flow and loops are also
 supported. 
 
 
-For example, the dafault XShopFile for installing a library that is available 
-in a repository is: 
+For example, the dafault XShopFile for installing OpenSSL is:
 
 ```
 FROM xshop:base_test_image
-FROM_VAGRANT ubuntu:precise64
+VAGRANT_FROM ubuntu/precise64
 
-RUN apt-get -y install {{ library }}={{ version }}
+{% if install_type=="debian" %}
+    RUN mkdir ~/packages
+    ADD {{ library }}-{{ version }} ~/packages/
+    RUN dpkg -i ~/packages/*.deb
+    RUN apt-get -y install -f
+
+{% elif install_type=='source' %}
+    ADD {{ library }}-{{ version }}.tar.gz ~/
+    WORKDIR ~/{{ library }}-{{ version }}/
+    RUN ./config --prefix=/usr
+    RUN make
+    RUN make install_sw
+
+{% else %}
+    RUN apt-get -y install {{ library }}={{ version }}
+
+{% endif %}
 ```
 
 Keep in mind that Docker caches consecutive builds up until a new command is 
@@ -97,7 +112,7 @@ PROJECT_NAME
 
 A project is created by running `xshop new [library] [folder]`. The folder
 name is arbitrary, but the library name is used for manipulating source files
-(e.g. <library>-<version>.tar.gz). 
+(e.g. [library]-[version].tar.gz). 
 
 ### Config.yml
 
@@ -129,8 +144,8 @@ notes: |
 `constants` specify the isolation provider (Vagrant or Docker), library, any
 other values that should be present in the build and test environment, and
 installation type (source, packages, remote). Source and packages types will
-attempt to copy source tarballs from `source/<library>-<version>/` or Debian 
-packages from `packages/<library>-<version>/` respectively during build. 
+attempt to copy source tarballs from `source/[library]-[version]/` or Debian 
+packages from `packages/[library]-[version]/` respectively during build. 
 
 `variables` specifies the basic test to demonstrate the proof of concept (i.e.
 `1.0.1f` is vulnerable, `1.0.1g` is not). This is run with `xshop test`. 
@@ -172,18 +187,14 @@ target:
 ### packages
 
 Here users can place packages for the library that should be installed. XShop 
-automatically copies all files from `packages/<library>-<version>` into the
-build context. From here, the user can simply run in the XShopFile:
-
-```
-ADD *.deb .
-RUN dpkg -i *.deb
-```
-
+automatically copies all files from `packages/[library]-[version]` into the
+build context. From here the user can simply copy and install them during
+build. 
+ 
 ### source
 
 Much like the packages directory, the user can place source tarballs in this
-directory. XShop automatically copies `<library>-<version>.tar.gz` into the
+directory. XShop automatically copies `[library]-[version].tar.gz` into the
 build context and the user can install from the XShopFile by copying in the
 tarball. Note that Docker/Vagrant automatically decompress the archive. 
 
@@ -242,13 +253,13 @@ def run_exploit():
 When testing kernels, you must use Vagrant. The installation of the new kernel
 proceeds just like any other project. The library name for the project is 
 simply set to `linux-image`, and the kernel packages are placed in 
-`packages/linux-image-<version>/`. To avoid building your own kernel packages
+`packages/linux-image-[version]/`. To avoid building your own kernel packages
 for the test, you can use Ubuntu boxes, and source kernel packages from 
 [Ubuntu Kernel Mainline](http://kernel.ubuntu.com/~kernel-ppa/mainline/). 
 
 For a reliable installation method, it is recommended to place 
 `linux-headers-*_amd64.deb`, `linux-headers-*_all.deb`, and 
-`linux-image-*_amd64.deb` into the `packages/linux-image-<version>/` folder so
+`linux-image-*_amd64.deb` into the `packages/linux-image-[version]/` folder so
 that all are installed together. Upgrading kernels can be tricky because of 
 VirtualBox Guest additions. It is recommended to install the Vagrant 
 `vagrant-vbguest` plugin to mitigate this. 
