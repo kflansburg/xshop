@@ -5,6 +5,7 @@ from xshop import new
 from xshop import config
 from xshop import test
 from xshop import pull
+from xshop import colors as clr
 import sys
 import os
 
@@ -16,6 +17,20 @@ if sys.argv[1] =='new':
         project = sys.argv[3]
         print "Building project "+project+" for library "+library+"."
         new.new_test_project(library, project)
+
+if sys.argv[1] =='export':
+	# Run test to output
+	print clr.BOLD + "Running Default Test: " + clr.ENDC,
+	if call(['xshop','test']):
+		print clr.FAIL+"FAILED"+clr.ENDC
+		raise Exception()
+
+	
+	# Copy Project
+
+	# Remove Src, Pkg, .DSStore
+
+	# Run tar
 
 elif sys.argv[1] =='test':
         variables = config.variables()
