@@ -8,6 +8,7 @@ from xshop import pull
 from xshop import colors as clr
 import sys
 import os
+import shutil
 
 if sys.argv[1] =='new':
     if len(sys.argv)<4 or len(sys.argv)>4:
@@ -20,17 +21,40 @@ if sys.argv[1] =='new':
 
 if sys.argv[1] =='export':
 	# Run test to output
-	print clr.BOLD + "Running Default Test: " + clr.ENDC,
+	print clr.BOLD + "Running Default Test: " + clr.ENDC
+
 	if call(['xshop','test']):
-		print clr.FAIL+"FAILED"+clr.ENDC
-		raise Exception()
+	        raise Exception()
 
+        # Copy Project
+	print clr.BOLD + "Copying and Cleaning Project Folder: " + clr.ENDC,
+        proj_dir = os.getcwd()
+        upload_dir = os.getcwd()+'_upload'
+        name = proj_dir.split('/')[-1]
+        os.chdir('..')
+        if shutil.copytree(proj_dir,upload_dir):
+                raise Exception()
 	
-	# Copy Project
-
 	# Remove Src, Pkg, .DSStore
+        devnull = open(os.devnull, 'w')
+        os.chdir(upload_dir)
+        call(['find . -name .DS_Store | xargs rm 2>&1 > /dev/null'],
+                stdout=devnull,
+                stderr=devnull,
+                shell=True)
+        call(['rm -rf packages/*'],shell=True)
+        call(['rm -rf source/*'],shell=True)
+        call(['rm','test.log']) 
+        print clr.OKGREEN + "DONE." + clr.ENDC
 
+	print clr.BOLD + "Compressing Project: " + clr.ENDC,
 	# Run tar
+        os.chdir('..')
+        if call(['tar','czf','%s.tar.gz'%(name,),name+"_upload"]):
+            raise Exception()
+        shutil.rmtree(upload_dir)
+        os.chdir(proj_dir)
+        print clr.OKGREEN + "DONE." + clr.ENDC
 
 elif sys.argv[1] =='test':
         variables = config.variables()
@@ -59,7 +83,7 @@ elif sys.argv[1]=='build_image':
 	image = sys.argv[2]
 	xshop_path = os.path.dirname(os.path.realpath(test.__file__))
 	dockerfilepath=xshop_path+'/defaults/contexts/%s/'%(image,)
-	call(['docker','build','-t',image,dockerfilepath])
+	call(['docker','build','-t','xshop:'+image,dockerfilepath])
 
 elif sys.argv[1]=='pull':
         pull.pull()
