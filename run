@@ -9,6 +9,8 @@ from xshop import colors as clr
 import sys
 import os
 import shutil
+import json
+import requests
 
 if sys.argv[1] =='new':
     if len(sys.argv)<4 or len(sys.argv)>4:
@@ -20,7 +22,7 @@ if sys.argv[1] =='new':
         new.new_test_project(library, project)
 
 if sys.argv[1] =='export':
-	# Run test to output
+        # Run test to output
 	print clr.BOLD + "Running Default Test: " + clr.ENDC
 
 	if call(['xshop','test']):
@@ -35,13 +37,18 @@ if sys.argv[1] =='export':
         if shutil.copytree(proj_dir,upload_dir):
                 raise Exception()
 	
-	# Remove Src, Pkg, .DSStore
+	# Remove Src, Pkg, .DSStore,.pyc
         devnull = open(os.devnull, 'w')
         os.chdir(upload_dir)
         call(['find . -name .DS_Store | xargs rm 2>&1 > /dev/null'],
                 stdout=devnull,
                 stderr=devnull,
                 shell=True)
+        call(['find . -name *.pyc | xargs rm 2>&1 > /dev/null'],
+                stdout=devnull,
+                stderr=devnull,
+                shell=True)
+
         call(['rm -rf packages/*'],shell=True)
         call(['rm -rf source/*'],shell=True)
         call(['rm','test.log']) 
@@ -50,18 +57,65 @@ if sys.argv[1] =='export':
 	print clr.BOLD + "Compressing Project: " + clr.ENDC,
 	# Run tar
         os.chdir('..')
-        if call(['tar','czf','%s.tar.gz'%(name,),name+"_upload"]):
+        if call(['tar','czf','upload.tar.gz',name+"_upload"]):
             raise Exception()
         shutil.rmtree(upload_dir)
         os.chdir(proj_dir)
         print clr.OKGREEN + "DONE." + clr.ENDC
+
+elif sys.argv[1] =='publish':
+        name = raw_input("Project Name: ")
+        library = raw_input("Library: ")
+        email = raw_input("Email (optional): ")
+        cve = raw_input("Related CVEs (optional, comma separated, no spaces: ")
+
+        print clr.BOLD+"Fetching Upload Information: "+clr.ENDC,
+        # Fetch upload URL
+        r = requests.get('https://xshop-site.herokuapp.com/vulnerabilities/new.json')
+
+        if not r.status_code==200:
+            print clr.FAIL+"FAILED\n"+clr.ENDC+"There was an error contacting the XShop server."
+            
+        else:
+            print clr.OKGREEN+"Done."+clr.ENDC
+            data= json.loads(r.text)
+       
+            upload_url = data['url']
+            folder = data['folder']
+
+            if os.path.isfile('upload.tar.gz'):
+                print clr.BOLD+"Uploading Project: \t"+clr.ENDC,
+    
+                r = requests.put(upload_url, data=open('upload.tar.gz', 'rb'))
+
+                if r.status_code==200:
+                    print clr.OKGREEN+"Done!"+clr.ENDC
+                    print clr.BOLD+"Publishing Project"+clr.ENDC,
+
+                    r = requests.post('http://xshop-site.herokuapp.com/vulnerabilities',
+                        params={'vulnerability[name]':name,
+                            'vulnerability[library]':library,
+                            'vulnerability[cve]':cve,
+                            'vulnerability[email]':email,
+                            'vulnerability[folder]':folder})
+                    if r.status_code==200:
+                        print clr.OKGREEN+"Done!"+clr.ENDC
+                    else:
+                        print clr.FAIL+"FAILED\n"+clr.ENDC+"Please try again."
+                    
+                else:
+                    print clr.OKGREEN+"FAILED\n"+clr.ENDC+"Please try again."
+            
+            else:
+                print clr.FAIL+"No Project Tarfile Found."+clr.ENDC
+             
 
 elif sys.argv[1] =='test':
         variables = config.variables()
         T = test.Trial(variables)
 	T.run()
 	f = open('output.log','w')
-	f.write(str(T.results()))
+	json.dump(T.results(),f)
 	f.close()		
 
 elif sys.argv[1]=='attach':
@@ -86,4 +140,8 @@ elif sys.argv[1]=='build_image':
 	call(['docker','build','-t','xshop:'+image,dockerfilepath])
 
 elif sys.argv[1]=='pull':
-        pull.pull()
+        if len(sys.argv)>2:
+            key = sys.argv[2]
+        else:
+            key = None
+        pull.pull(key = key)
