@@ -53,6 +53,8 @@ class TestCase:
         # Dont try to run function in remote target
         if not (container=='target' and 'remote:' in self.config.target):
             result = self.vmanager.run_function(container, function)
+            result['container']=container
+            result['function']=function
             self.results.append(result)
 
             ret = result['return_code']
