@@ -29,6 +29,9 @@ pip install -U docker-compose
 echo "Yaml"
 pip install pyyaml
 
+echo "Update Requests"
+pip install --upgrade requests
+
 echo "Installing xshop:"
 echo "	Copying module to /usr/lib/python2.7/"
 cp -r xshop /usr/lib/python2.7/
