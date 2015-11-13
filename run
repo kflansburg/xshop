@@ -66,12 +66,11 @@ if sys.argv[1] =='export':
 elif sys.argv[1] =='publish':
         name = raw_input("Project Name: ")
         library = raw_input("Library: ")
-        email = raw_input("Email (optional): ")
         cve = raw_input("Related CVEs (optional, comma separated, no spaces: ")
 
         print clr.BOLD+"Fetching Upload Information: "+clr.ENDC,
         # Fetch upload URL
-        r = requests.get('https://xshop-site.herokuapp.com/vulnerabilities/new.json')
+        r = requests.get('http://localhost:3000/vulnerabilities/new.json')
 
         if not r.status_code==200:
             print clr.FAIL+"FAILED\n"+clr.ENDC+"There was an error contacting the XShop server."
@@ -88,18 +87,18 @@ elif sys.argv[1] =='publish':
     
                 r = requests.put(upload_url, data=open('upload.tar.gz', 'rb'))
 
-                if r.status_code==200:
+                if r.status_code<300:
                     print clr.OKGREEN+"Done!"+clr.ENDC
                     print clr.BOLD+"Publishing Project"+clr.ENDC,
 
-                    r = requests.post('http://xshop-site.herokuapp.com/vulnerabilities',
+                    r = requests.post('http://localhost:3000/vulnerabilities.json',
                         params={'vulnerability[name]':name,
                             'vulnerability[library]':library,
                             'vulnerability[cve]':cve,
-                            'vulnerability[email]':email,
                             'vulnerability[folder]':folder})
-                    if r.status_code==200:
+                    if r.status_code<300:
                         print clr.OKGREEN+"Done!"+clr.ENDC
+                        print clr.BOLD+"To edit/delete this posting, please save this password: "+clr.ENDC+json.loads(r.text)['password']
                     else:
                         print clr.FAIL+"FAILED\n"+clr.ENDC+"Please try again."
                     
