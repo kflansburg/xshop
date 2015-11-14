@@ -23,13 +23,15 @@ if sys.argv[1] =='new':
 
 if sys.argv[1] =='export':
         # Run test to output
-	print clr.BOLD + "Running Default Test: " + clr.ENDC
+		print clr.BOLD + "Running Default Test: " + clr.ENDC
 
-	if call(['xshop','test']):
+		if call(['xshop','test']):
 	        raise Exception()
 
+		files = pull.files()
+
         # Copy Project
-	print clr.BOLD + "Copying and Cleaning Project Folder: " + clr.ENDC,
+		print clr.BOLD + "Copying and Cleaning Project Folder: " + clr.ENDC,
         proj_dir = os.getcwd()
         upload_dir = os.getcwd()+'_upload'
         name = proj_dir.split('/')[-1]
@@ -37,9 +39,11 @@ if sys.argv[1] =='export':
         if shutil.copytree(proj_dir,upload_dir):
                 raise Exception()
 	
-	# Remove Src, Pkg, .DSStore,.pyc
+
+		# Remove Src, Pkg, .DSStore,.pyc
         devnull = open(os.devnull, 'w')
         os.chdir(upload_dir)
+
         call(['find . -name .DS_Store | xargs rm 2>&1 > /dev/null'],
                 stdout=devnull,
                 stderr=devnull,
