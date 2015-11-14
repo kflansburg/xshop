@@ -23,15 +23,15 @@ if sys.argv[1] =='new':
 
 if sys.argv[1] =='export':
         # Run test to output
-		print clr.BOLD + "Running Default Test: " + clr.ENDC
+	print clr.BOLD + "Running Default Test: " + clr.ENDC
 
-		if call(['xshop','test']):
+	if call(['xshop','test']):
 	        raise Exception()
 
-		files = pull.files()
+	files = pull.files()
 
         # Copy Project
-		print clr.BOLD + "Copying and Cleaning Project Folder: " + clr.ENDC,
+	print clr.BOLD + "Copying and Cleaning Project Folder: " + clr.ENDC,
         proj_dir = os.getcwd()
         upload_dir = os.getcwd()+'_upload'
         name = proj_dir.split('/')[-1]
@@ -40,10 +40,20 @@ if sys.argv[1] =='export':
                 raise Exception()
 	
 
-		# Remove Src, Pkg, .DSStore,.pyc
         devnull = open(os.devnull, 'w')
         os.chdir(upload_dir)
 
+        # Remove Files Downloaded with XSHOP PULL,
+        # remove containing folders if empty
+        for k,v in files.iteritems():
+            os.chdir(k)
+            for f in v:
+                os.remove(f)
+            os.chdir(upload_dir)
+            if os.listdir(k)==[]:
+                shutil.rmtree(k)
+
+        # Remove .DS_Stor and .pyc files
         call(['find . -name .DS_Store | xargs rm 2>&1 > /dev/null'],
                 stdout=devnull,
                 stderr=devnull,
@@ -53,9 +63,10 @@ if sys.argv[1] =='export':
                 stderr=devnull,
                 shell=True)
 
-        call(['rm -rf packages/*'],shell=True)
-        call(['rm -rf source/*'],shell=True)
-        call(['rm','test.log']) 
+        # Remove Log if its there
+        if os.path.isfile('test.log'):
+            os.remove('test.log')
+
         print clr.OKGREEN + "DONE." + clr.ENDC
 
 	print clr.BOLD + "Compressing Project: " + clr.ENDC,

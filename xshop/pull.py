@@ -69,8 +69,7 @@ def __download_url(url):
     
     print clr.OKGREEN+"Success"+clr.ENDC
     if not (__download_file(url+".asc") and 
-        __download_file(url+".sig") and
-        __download_file(url+".sig.asc")):
+        __download_file(url+".sig")):
         print (clr.OKGREEN
             + "Signing file found!"
             + clr.ENDC)
@@ -110,6 +109,7 @@ def __verify(u):
     f = u.split('/')[-1]
     devnull=open(os.devnull,'w')
 
+    results = 0
     if (sh(['gpg',
             '--verify',
             f+".asc"],
@@ -124,11 +124,18 @@ def __verify(u):
         print (clr.WARNING
             + "Verification Failed!"
             + clr.ENDC)
-        return 1
+        result = 1
     else:
         print (clr.OKGREEN
             + "Verified"
             + clr.ENDC)
+
+    # Remove any verification files
+    if os.path.isfile(f+".sig"):
+        os.remove(f+".sig")
+    if os.path.isfile(f+".asc"):
+        os.remove(f+".asc")
+    return results
  
 def __check_sha1(u):
     """
@@ -136,15 +143,20 @@ def __check_sha1(u):
     """
 
     f = u.split('/')[-1]+".sha1"
+    results = 0
     if sh(['sha1sum','-c',f]):
         print(clr.WARNING
             + "SHA1 Verification Failed!"
             + clr.ENDC)
-        return 1
+        result = 1
     else:
         print(clr.OKGREEN
             + "SHA1 Verified"
             + clr.ENDC)
+
+    if os.path.isfile(f):
+        os.remove(f)
+    return results
 
 def ___check_md5(u):
     """
@@ -152,17 +164,20 @@ def ___check_md5(u):
     """
 
     f = u.split('/')[-1]+".md5"
-
+    results = 0
     if sh(['md5sum','-c',f]):
         print(clr.WARNING
             + "MD5 Verification Failed!"
             + clr.ENDC)
-        return 1
+        results = 1
     else:
         print(clr.OKGREEN
             + "MD5 Verified"
             + clr.ENDC)
 
+    if os.path.isfile(f):
+        os.remove(f)
+    return results
 
 def __resolve_ambiguous_id(data):
     """
@@ -315,7 +330,7 @@ def files():
 	urls = c.config['files']
 	urls = __generate_urls(urls)
 	for k,v in urls.iteritems():
-		files[k] = map(lambda u: u.split("/")[-1],urls[k])
+		urls[k] = map(lambda u: u.split("/")[-1],urls[k])
 	return urls
 
 def pull(key=None):
