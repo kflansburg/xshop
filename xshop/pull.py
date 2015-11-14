@@ -310,6 +310,14 @@ def pull_local_project():
     except KeyError:
         print clr.OKBLUE+"No Notes."+clr.ENDC
 
+def files():
+	c = config.Config({'version':'blah'})
+	urls = c.config['files']
+	urls = __generate_urls(urls)
+	for k,v in urls.iteritems():
+		files[k] = map(lambda u: u.split("/")[-1],urls[k])
+	return urls
+
 def pull(key=None):
     if key: 
         pull_from_site(key)
