@@ -99,6 +99,9 @@ def __download_url(url):
         return 4
 
     else:
+        print (clr.WARNING
+            +"NO SHA1"
+            +clr.ENDC)
         return 5
 
 def __verify(u):

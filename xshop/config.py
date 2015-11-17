@@ -126,6 +126,6 @@ class Config:
             if not 'library' in self.test_vars:
                 raise exceptions.ConfigError("No library found for source")
             self.source_path = (self.project_directory + 
-                "/source/%s-%s.tar.gz")%(self.test_vars['library'],
+                "/source/%s-%s.tar.*")%(self.test_vars['library'],
                     self.test_vars['version'],)
 

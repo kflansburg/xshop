@@ -48,7 +48,8 @@ if sys.argv[1] =='export':
         for k,v in files.iteritems():
             os.chdir(k)
             for f in v:
-                os.remove(f)
+                if os.path.isfile(f):
+                    os.remove(f)
             os.chdir(upload_dir)
             if os.listdir(k)==[]:
                 shutil.rmtree(k)
