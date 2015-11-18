@@ -1,0 +1,22 @@
+constants:
+  build_dependencies: []
+  install_type: debian
+  library: linux-image
+  provider: vagrant
+notes: |
+  Demonstration of Full Nelson vulnerabiltiy using Ubuntu Mainline Kernel.
+public_keys: []
+source: []
+files:
+  packages/linux-image-2.6.36:
+    - "http://kernel.ubuntu.com/~kernel-ppa/mainline/v2.6.36-maverick/linux-headers-2.6.36-020636-generic_2.6.36-020636.201010210905_amd64.deb"
+    - "http://kernel.ubuntu.com/~kernel-ppa/mainline/v2.6.36-maverick/linux-headers-2.6.36-020636_2.6.36-020636.201010210905_all.deb"
+    - "http://kernel.ubuntu.com/~kernel-ppa/mainline/v2.6.36-maverick/linux-image-2.6.36-020636-generic_2.6.36-020636.201010210905_amd64.deb"
+  packages/linux-image-2.6.37:
+    - "http://kernel.ubuntu.com/~kernel-ppa/mainline/v2.6.37-natty/linux-headers-2.6.37-020637-generic_2.6.37-020637.201101050908_amd64.deb"
+    - "http://kernel.ubuntu.com/~kernel-ppa/mainline/v2.6.37-natty/linux-headers-2.6.37-020637_2.6.37-020637.201101050908_all.deb"
+    - "http://kernel.ubuntu.com/~kernel-ppa/mainline/v2.6.37-natty/linux-image-2.6.37-020637-generic_2.6.37-020637.201101050908_amd64.deb"
+variables:
+  version:
+    - '2.6.36'
+    - '2.6.37'
