@@ -71,7 +71,7 @@ class Helper:
         required.
         """
         if self.config.test_vars['install_type'] == 'source' and container=='target':
-            subprocess.call(['cp -p %s .'%(self.config.source_path,)], shell=True)
+            subprocess.call(['cp','-p',self.config.source_path,'.'])
 
 
     def copycontext(self, container):

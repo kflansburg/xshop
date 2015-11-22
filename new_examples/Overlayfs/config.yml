@@ -2,7 +2,7 @@ constants:
   build_dependencies: []
   install_type: remote
   library: linux-image
-  provider: vagrant
+  provider: xshopvb
 notes: |
   Demonstrates OverlayFS vulnerability in kernel 3.16 using a stock
   Ubuntu Utopic 64 image. 

@@ -65,4 +65,7 @@ docs/_build/
 examples/*/source
 examples/*/packages
 
+new_examples/*/source
+new_examples/*/packages
+
 
