@@ -16,6 +16,7 @@ Currently XShop supports:
 ### Docker
 Docker is the most performant of the three. To use docker, you must have it installed, 
 and [configured to run without sudo](https://docs.docker.com/v1.8/installation/ubuntulinux/#create-a-docker-group). 
+You will also need to install [Docker Compose](https://docs.docker.com/compose/install/)
 Docker Machine is not supported. Once installed, you may want to build the default testing image, used in most projects:
 `xshop build_image base_test_image`. 
 
