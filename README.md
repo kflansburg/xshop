@@ -2,34 +2,36 @@
 
 ## General Installation
 
-The install script requires that [PIP](http://pip.readthedocs.org/en/stable/installing/)
-is installed. 
+The install script requires that [pip](http://pip.readthedocs.org/en/stable/installing/)
+is installed to satisfy python dependencies. You can then run `sudo ./install.sh` from 
+the root of the source tree to install XShop. 
 
-XShop requires a virtualization provider, either Docker or Vagrant. Vagrant is
-required for testing kernel vulnerabilities, due to limitations of container
-virtualization. XShop requires that you can run Docker without `sudo`. 
+To use XShop, you must have installed one of the supported virtualization providers. 
+Currently XShop supports:
 
-Then run from the XShop source directory: 
-```
-./install.sh
-```
+* Docker
+* Vagrant
+* XShopVB
 
-This installs all Python dependencies, the XShop library, and command line 
-utility. 
+### Docker
+Docker is the most performant of the three. To use docker, you must have it installed, 
+and [configured to run without sudo](https://docs.docker.com/v1.8/installation/ubuntulinux/#create-a-docker-group). 
+Docker Machine is not supported. Once installed, you may want to build the default testing image, used in most projects:
+`xshop build_image base_test_image`. 
 
-When using Docker, you will want to build test environments from an image which
-includes some software that is not included in typical distribution images 
-(such as Python). To build these base images, run:
+### Vagrant
+To test some system components, such as the kernel, virtual machines must be used. Vagrant is one possibility. 
+Vagrant supports a number of virtual machine providers, but VirtualBox was used for testing. It is a good 
+idea to install the [vagrant-vbguest](https://github.com/dotless-de/vagrant-vbguest) plugin, as it makes 
+kernel changes much more reliable. 
 
-```
-xshop build_image [image_name]
-```
-
-* `base_test_image`: installs Python, GCC, Clang, and Make on top of Debian Jessie. 
-* `clang38`: builds the latest Clang from source on Debian Jessie. 
-
-Tests using Vagrant can typically begin from a stock distribution box. 
-
+### XShopVB
+An alternative to Vagrant is an experimental tool, written for XShop. It also uses VirtualBox as the underlying
+technology, but attempts to implement build caching similar to that offered by Docker. This is done by maintaining
+a tree of snapshots. This tool offers significant performance advantages over Vagrant. It is designed to interact 
+with Virtual Boxes which were configured for use with Vagrant (i.e. vagrant user/ssh configuration). You must
+manually configure this. The easiest way is to use Vagrant to provision the desired Box, and then use VBoxManage 
+to rename it to the required name (how you wish to identify the box in the XShopFile).
 
 ## Project Goals
 
@@ -61,7 +63,6 @@ can be introduced into the build process in a controlled manner. Templating
 is implemented using Jinja2, and as such control flow and loops are also
 supported. 
 
-
 For example, the dafault XShopFile for installing OpenSSL is:
 
 ```
@@ -89,8 +90,7 @@ VAGRANT_FROM ubuntu/precise64
 
 Keep in mind that Docker caches consecutive builds up until a new command is 
 found, so try to keep as much of the file the same as possible for different 
-variables, with differing commands placed at the end of the file. Vagrant
-does not support caching, and is much slower in general. 
+variables, with differing commands placed at the end of the file. 
 
 ## Project Layout
 
@@ -178,12 +178,8 @@ attacker:
   links:
     - target 
   command: /bin/bash -c "while true; do sleep .1; done"
-  environment:
-    CONTAINER_NAME: attacker
 target:
   build: target/
-  environment:
-    CONTAINER_NAME: target
   command: /bin/bash -c "while true; do sleep .1; done"
 ```
 
