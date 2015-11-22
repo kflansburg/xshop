@@ -2,6 +2,9 @@
 
 ## General Installation
 
+The install script requires that [PIP](http://pip.readthedocs.org/en/stable/installing/)
+is installed. 
+
 XShop requires a virtualization provider, either Docker or Vagrant. Vagrant is
 required for testing kernel vulnerabilities, due to limitations of container
 virtualization. XShop requires that you can run Docker without `sudo`. 
