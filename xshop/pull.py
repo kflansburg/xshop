@@ -113,74 +113,87 @@ def __verify(u):
     devnull=open(os.devnull,'w')
 
     results = 0
-    if (sh(['gpg',
-            '--verify',
-            f+".asc"],
-            stdout=devnull,
-            stderr=devnull) and 
-        sh(['gpg',
-            '--verify',
-            f+".sig"],
-            stdout=devnull,
-            stderr=devnull)):
+    try:
+        if (sh(['gpg',
+                '--verify',
+                f+".asc"],
+                stdout=devnull,
+                stderr=devnull) and 
+            sh(['gpg',
+                '--verify',
+                f+".sig"],
+                stdout=devnull,
+                stderr=devnull)):
 
-        print (clr.WARNING
-            + "Verification Failed!"
-            + clr.ENDC)
-        result = 1
-    else:
-        print (clr.OKGREEN
-            + "Verified"
-            + clr.ENDC)
+            print (clr.WARNING
+                + "Verification Failed!"
+                + clr.ENDC)
+            results = 1
+        else:
+            print (clr.OKGREEN
+                + "Verified"
+                + clr.ENDC)
 
-    # Remove any verification files
-    if os.path.isfile(f+".sig"):
-        os.remove(f+".sig")
-    if os.path.isfile(f+".asc"):
-        os.remove(f+".asc")
-    return results
- 
+    except OSError:
+        print clr.WARNING + "GPG not found on system."+clr.ENDC
+        results = 1
+    finally:
+        # Remove any verification files
+        if os.path.isfile(f+".sig"):
+            os.remove(f+".sig")
+        if os.path.isfile(f+".asc"):
+            os.remove(f+".asc")
+        return results
+
 def __check_sha1(u):
     """
     Checks a file with SHA-1
     """
+    try:
+        f = u.split('/')[-1]+".sha1"
+        results = 0
+        if sh(['sha1sum','-c',f]):
+            print(clr.WARNING
+                + "SHA1 Verification Failed!"
+                + clr.ENDC)
+            results = 1
+        else:
+            print(clr.OKGREEN
+                + "SHA1 Verified"
+                + clr.ENDC)
 
-    f = u.split('/')[-1]+".sha1"
-    results = 0
-    if sh(['sha1sum','-c',f]):
-        print(clr.WARNING
-            + "SHA1 Verification Failed!"
-            + clr.ENDC)
-        result = 1
-    else:
-        print(clr.OKGREEN
-            + "SHA1 Verified"
-            + clr.ENDC)
-
-    if os.path.isfile(f):
-        os.remove(f)
-    return results
+    except OSError:
+        print clr.WARNING + "sha1sum not found on system."+clr.ENDC
+        results =  1
+    finally:
+        if os.path.isfile(f):
+            os.remove(f)
+        return results
 
 def ___check_md5(u):
     """
     Checks a given file with MD5
     """
+    try:
+        f = u.split('/')[-1]+".md5"
+        results = 0
+        if sh(['md5sum','-c',f]):
+            print(clr.WARNING
+                + "MD5 Verification Failed!"
+                + clr.ENDC)
+            results = 1
+        else:
+            print(clr.OKGREEN
+                + "MD5 Verified"
+                + clr.ENDC)
 
-    f = u.split('/')[-1]+".md5"
-    results = 0
-    if sh(['md5sum','-c',f]):
-        print(clr.WARNING
-            + "MD5 Verification Failed!"
-            + clr.ENDC)
-        results = 1
-    else:
-        print(clr.OKGREEN
-            + "MD5 Verified"
-            + clr.ENDC)
-
-    if os.path.isfile(f):
-        os.remove(f)
-    return results
+    except OSError:
+        print clr.WARNING+"md5sum not found on system."+clr.ENDC
+        results =  1
+    finally:
+        if os.path.isfile(f):
+                os.remove(f)
+        return results
 
 def __resolve_ambiguous_id(data):
     """
@@ -329,12 +342,12 @@ def pull_local_project():
         print clr.OKBLUE+"No Notes."+clr.ENDC
 
 def files():
-	c = config.Config({'version':'blah'})
-	urls = c.config['files']
-	urls = __generate_urls(urls)
-	for k,v in urls.iteritems():
-		urls[k] = map(lambda u: u.split("/")[-1],urls[k])
-	return urls
+    c = config.Config({'version':'blah'})
+    urls = c.config['files']
+    urls = __generate_urls(urls)
+    for k,v in urls.iteritems():
+        urls[k] = map(lambda u: u.split("/")[-1],urls[k])
+    return urls
 
 def pull(key=None):
     if key: 
