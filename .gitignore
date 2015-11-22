@@ -60,9 +60,12 @@ coverage.xml
 docs/_build/
 
 
+password
 
 # xshop stuff
 examples/*/source
 examples/*/packages
+new_examples/*/source
+new_examples/*/packages
 
 
