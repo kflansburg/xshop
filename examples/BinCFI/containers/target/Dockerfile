@@ -8,10 +8,8 @@ RUN echo {{ builddeps[0] }}
   RUN apt-get -y install {{ d }}
 {% endfor %}
 
-ADD cfi /home/cfi/
+ADD {{ library }}-{{ version}} /home/cfi/
 ADD install.sh /home/
 ADD vuln.c /home/
 ADD Makefile /home/
-
-# run installation script
-RUN /bin/bash ./install.sh
+RUN /bin/sh /home/install.sh

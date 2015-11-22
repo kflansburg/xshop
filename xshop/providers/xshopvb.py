@@ -123,10 +123,13 @@ class VirtualMachine:
         """
         SSH into box and execute command
         """        
+	xshop_path = os.path.dirname(os.path.realpath(clr.__file__))
+	key_path = xshop_path+"/defaults/vagrant.key"
+
         ssh_command = ['ssh',
             '-o','GlobalKnownHostsFile=/dev/null',
             '-o','UserKnownHostsFile=/dev/null',
-            '-i','/Users/kevin/Dropbox/xshopvb/vagrant.key',
+            '-i',key_path,
             '-o','StrictHostKeyChecking=no',
             '-p',str(self.port),
             '%s@localhost'%(self.username)]
@@ -137,21 +140,21 @@ class VirtualMachine:
         """
         SSH into box and execute command
         """        
+	xshop_path = os.path.dirname(os.path.realpath(clr.__file__))
+	key_path = xshop_path+"/defaults/vagrant.key"
         ssh_command = ['ssh',
             '-o','GlobalKnownHostsFile=/dev/null',
             '-o','UserKnownHostsFile=/dev/null',
-            '-i','/Users/kevin/Dropbox/xshopvb/vagrant.key',
+            '-i',key_path,
             '-o','StrictHostKeyChecking=no',
             '-p',str(self.port),
             '%s@localhost'%(self.username),
             "cd %s;%s%s"%(workdir,'sudo ' if superuser else '',command)]
-
         p = Popen(ssh_command,stdout=PIPE,stderr=PIPE)
         p.wait()
-        # if p.wait(): 
-        #     raise Exception("There was a problem SSHing into the machine, command: %s\n%s\n%s\n"
-        #         %(command,p.stdout.read(),p.stderr.read()))
-        return {'return_code':p.returncode,'stdout':p.stdout.read(),'stderr':p.stderr.read()}
+        stdout = p.stdout.read()
+        stderr = p.stderr.read()
+        return {'return_code':p.returncode,'stdout':stdout,'stderr':stderr}
 
     def start(self):
         """
@@ -213,7 +216,7 @@ class VirtualMachine:
         Returns dictionary of all matching values to key/prefix. 
         If only one match, returns that value. 
         """
-
+        time.sleep(.1)
         output = vboxmanage(['showvminfo','--machinereadable',self.uuid],
             "There was an error fetching %s's info"%(self.name,))
 

@@ -1,7 +1,4 @@
-FROM vivid64
+FROM kflansburg/utopic64
+FROM_XSHOPVB Utopic
 
-# Install Kernel
-RUN apt-get -y install python
-RUN mkdir ~/packages
-WORKDIR ~/packages
-KERNEL {{ version }}
+WORKDIR ~/

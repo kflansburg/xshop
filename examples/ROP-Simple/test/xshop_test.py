@@ -58,31 +58,13 @@ def exploit():
             return 0
     except:
         return is_error()
-#
-# Define the code which runs inside the test containers.
-#
-# Use the run() function to list which hooks should run in which containers
-# and in what order. Simply call H.run() as many times as needed.
-#
-# Hooks can be any function in this file.
-#
 
-def run(H):
-	H.run('target','run_exploit')
+def run(run_function):
+	run_function('target','run_exploit')
 
 def run_exploit():
-    try:
-        cflag = os.environ['cflags']
-    except:
-        cflag = ''
-	
-    # TODO : compiling in test code is ugly
-    os.system('make CC=clang CFLAGS="%s"' % cflag)
-    
-
-
     global p, stdin, stdout
-    p = Popen("./ROP-Simple 2>/tmp/err", shell=True, stdin=PIPE, stdout=PIPE)
+    p = Popen("/home/ROP-Simple 2>/tmp/err", shell=True, stdin=PIPE, stdout=PIPE)
     stdin = p.stdin
     stdout = p.stdout
     return exploit()

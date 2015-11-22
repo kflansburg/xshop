@@ -1,0 +1,59 @@
+			     BASH PATCH REPORT
+			     =================
+
+Bash-Release: 3.1
+Patch-ID: bash31-022
+
+Bug-Reported-by:	Michal Zalewski <lcamtuf@coredump.cx>
+Bug-Reference-ID:
+Bug-Reference-URL:
+
+Bug-Description:
+
+When bash is parsing a function definition that contains a here-document
+delimited by end-of-file (or end-of-string), it leaves the closing delimiter
+uninitialized.  This can result in an invalid memory access when the parsed
+function is later copied.
+
+Patch:
+
+*** ../bash-3.1.21/make_cmd.c	2005-07-07 08:14:57.000000000 -0400
+--- make_cmd.c	2014-10-02 20:33:47.000000000 -0400
+***************
+*** 672,675 ****
+--- 672,676 ----
+    temp->redirector = source;
+    temp->redirectee = dest_and_filename;
++   temp->here_doc_eof = 0;
+    temp->instruction = instruction;
+    temp->flags = 0;
+*** ../bash-3.1.21/copy_cmd.c	2003-10-07 11:43:44.000000000 -0400
+--- copy_cmd.c	2014-10-02 20:33:47.000000000 -0400
+***************
+*** 117,121 ****
+      case r_reading_until:
+      case r_deblank_reading_until:
+!       new_redirect->here_doc_eof = savestring (redirect->here_doc_eof);
+        /*FALLTHROUGH*/
+      case r_reading_string:
+--- 117,121 ----
+      case r_reading_until:
+      case r_deblank_reading_until:
+!       new_redirect->here_doc_eof = redirect->here_doc_eof ? savestring (redirect->here_doc_eof) : 0;
+        /*FALLTHROUGH*/
+      case r_reading_string:
+*** ../bash-3.1/patchlevel.h	Wed Jul 20 13:58:20 2005
+--- patchlevel.h	Wed Dec  7 13:48:42 2005
+***************
+*** 26,30 ****
+     looks for to find the patch level (for the sccs version string). */
+  
+! #define PATCHLEVEL 21
+  
+  #endif /* _PATCHLEVEL_H_ */
+--- 26,30 ----
+     looks for to find the patch level (for the sccs version string). */
+  
+! #define PATCHLEVEL 22
+  
+  #endif /* _PATCHLEVEL_H_ */

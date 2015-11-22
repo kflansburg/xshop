@@ -1,0 +1,14 @@
+constants:
+  builddeps: []
+  provider: docker
+  install_type: remote
+  library: ROP-Simple
+notes: ''
+public_keys: []
+files: {}
+variables:
+  cflags:
+    - ""
+    - "-fsanitize=cfi -flto"
+    - "-fsanitize=address"
+    - "-fsanitize=safe-stack"

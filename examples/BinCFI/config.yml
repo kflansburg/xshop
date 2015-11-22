@@ -1,0 +1,18 @@
+constants:
+  builddeps: ['gcc-multilib','python-dev','python-pip','libswitch-perl']
+  install_type: debian
+  library: instrumentation
+  provider: docker
+public_keys: []
+files: {}
+variables:
+  version: 
+    - 'bincfi'
+notes: |
+  The exploit script scans for all possible return addresses within the 
+  instrumented binary. These results are output to test.log. The test 
+  simply returns Invulnerable after the scan is complete.
+
+  Instrumentation takes place during the build phase for the target container.
+  The instrumentation tool is shipped with this project in the packages folder,
+  because it is not readily hosted online. 

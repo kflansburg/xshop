@@ -3,14 +3,15 @@ constants:
   dependencies: []
   library: openssl
   install_type: source
-  provider: vagrantw
+  provider: docker
 variables:
   version:
     - 1.0.1f
     - 1.0.1g
-source:
-  - "http://openssl.org/source/old/1.0.0/openssl-1.0.0r.tar.gz"
-  - "http://openssl.org/source/old/1.0.1/openssl-{1.0.1a,1.0.1f,1.0.1g}.tar.gz"
+files:
+  source:
+    - "http://openssl.org/source/old/1.0.0/openssl-1.0.0r.tar.gz"
+    - "http://openssl.org/source/old/1.0.1/openssl-{1.0.1a,1.0.1f,1.0.1g}.tar.gz"
 public_keys:
   - "F295C759"
   - "0E604491"

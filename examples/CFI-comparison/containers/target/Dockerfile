@@ -3,10 +3,10 @@ FROM xshop:clang38
 WORKDIR /home/
 
 {% for d in builddeps %}
-  RUN apt-get -y install {{ d }}
+  	RUN apt-get -y install {{ d }}
 {% endfor %}
 
-ADD . /home/
+ADD vuln.cpp /home/
 
 # compile
 {% if compiler == 'clang++' %}
@@ -19,7 +19,7 @@ ADD . /home/
 
 {% elif compiler == 'g++ -fvtable-verify=std' %}
   
-  RUN ./gcc/usr/local/bin/g++ -fvtable-verify=std vuln.cpp -o vuln
+  RUN g++ -fvtable-verify=std vuln.cpp -o vuln
 
 {% elif compiler == 'clang++ -fsanitize=cfi' %}
   

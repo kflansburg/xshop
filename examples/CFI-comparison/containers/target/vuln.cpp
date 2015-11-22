@@ -9,7 +9,7 @@
 class Object {
   public:
   virtual void func() {
-    printf("GOOD\n");
+    fprintf(stderr, "GOOD\n");
   }
 };
 

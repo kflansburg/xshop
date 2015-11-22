@@ -1,16 +1,18 @@
-Container Actions:
-	Execute Hook and collect results
-	Build an environment from a Dockerfile and save as image
-	Check if image already exists
-	Shut down running test
-	Start machines with network config from compose file
-	
-Move context to docker
-ContextManager - Constructs build and compose contexts
-VirtualizationManager - Handles which virtualization is used seamlessly
-	- DockerManager - Manipulates Docker environment
-	_ VirtualBoxManager - Manipulates VirtualBox environment
-More Robust Config
-More transparent order of variables
+Final Clean up REPO
+README
+Install page on site
+Heartbleed Case Study on site
+Overview on Site
+Presentation
 
 
+
+Update Examples
+XSHOP pull (Expand, Dest)
+CLI
+Install Script
+Dockerfile - unsupported commands
+Docker Compose - extend for vagrant?
+Vagrant base test box?
+FILE NAMES
+EXPORT -> XSHOP TEST to OUTPUT, COPY, STRIP SRC/PKG, TAR	

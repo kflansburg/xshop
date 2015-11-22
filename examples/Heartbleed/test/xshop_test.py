@@ -3,10 +3,10 @@ import subprocess
 import os
 import time
 
-def run(H):
-    H.run('target','start_server')
+def run(run_function):
+    run_function('target','start_server')
     time.sleep(5)
-    H.run('attacker','run_exploit')
+    run_function('attacker','run_exploit')
 
 
 def start_server():

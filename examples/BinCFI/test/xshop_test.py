@@ -7,11 +7,10 @@
 # Hooks can be any function in this file. 
 #
 import exploit
-def run(H):
-	H.run('target','run_exploit')
+
+def run(run_function):
+	run_function('target','run_exploit')
 
 def run_exploit():
     return exploit.run()
 
-#if __name__ == '__main__':
-#    print "Result : %d" % run_exploit()

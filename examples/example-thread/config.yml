@@ -1,0 +1,14 @@
+constants:
+  builddeps: []
+  install_type: remote
+  library: none
+  provider: docker
+notes: |
+  Example script with a race condition, and its mitigation using Clang's Thread
+  Sanitizer
+public_keys: []
+files: {}
+variables:
+  cflag:
+    - ""
+    - "-fsanitize=thread"

@@ -1,5 +1,5 @@
 FROM xshop:base_test_image
-VAGRANT_FROM ubuntu/precise64
+FROM_VAGRANT ubuntu/precise64
 #
 # Installation
 #

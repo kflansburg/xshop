@@ -1,0 +1,21 @@
+constants:
+  builddeps: []
+  install_type: remote
+  library: CFI
+  provider: docker
+public_keys: []
+files: {}
+variables:
+  compiler: 
+    - 'g++'
+    - 'clang++'
+#   - 'g++ -fvtable-verify=std'
+    - 'clang++ -fsanitize=cfi'
+notes: |
+  Tests the effectiveness of compiler-based CFI techniques on example 
+  vulnerable script. 
+
+  Need to build xshop:clang38 for testing Clang -fsanitize=cfi
+ 
+  Need to g++ compiled with --enabled-vtable-verify in target to test
+        -fvtable-verify

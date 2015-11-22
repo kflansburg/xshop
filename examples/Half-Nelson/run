@@ -1,9 +1,0 @@
-#!/usr/bin/python2.7
-
-from xshop import test
-
-T = test.TestCase({'version':'2.6.32','exploit':'half-nelson'})
-
-T.run()
-
-
