@@ -123,7 +123,7 @@ class Provider:
             # Set Environment
             compose[container]['environment']={}
             for k,v in self.config.test_vars.iteritems():
-                compose[container]['environment'][k]=v
+                compose[container]['environment'][k]=str(v)
             compose[container]['environment']['container_name'] = container
 
             # Support Attacking Remove
