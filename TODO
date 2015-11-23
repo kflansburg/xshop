@@ -1,18 +1,3 @@
 Final Clean up REPO
-README
-Install page on site
-Heartbleed Case Study on site
-Overview on Site
 Presentation
-
-
-
-Update Examples
-XSHOP pull (Expand, Dest)
-CLI
-Install Script
-Dockerfile - unsupported commands
-Docker Compose - extend for vagrant?
-Vagrant base test box?
-FILE NAMES
-EXPORT -> XSHOP TEST to OUTPUT, COPY, STRIP SRC/PKG, TAR	
+Overview on site

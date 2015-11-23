@@ -75,7 +75,7 @@ class Config:
         self.target=target
         self.config = self.__load_file('config.yml')
         self.__verify_parse_config()
-        self.compose = self.__load_file('docker-compose.yml')
+        self.compose = self.__load_file('test-environment.yml')
         self.__randomize_container_names()
          
     def __load_file(self, filename):

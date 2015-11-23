@@ -49,17 +49,17 @@ def new_test_project(library, name):
 	# Copy in default files
 	xshop_path = os.path.dirname(os.path.realpath(__file__))
 	shutil.copy2(xshop_path
-		+ "/defaults/docker-compose-test-default.yml",
-		name+'/docker-compose.yml')
+		+ "/defaults/test-environment-default.yml",
+		name+'/test-environment.yml')
 	shutil.copy2(xshop_path
 		+ "/defaults/xshop_test-default.py",
 		name+'/test/xshop_test.py')
 	shutil.copy2(xshop_path
-		+ "/defaults/Dockerfile-test-attacker-default",
-		name+'/containers/attacker/Dockerfile')
+		+ "/defaults/XShopfile-test-attacker-default",
+		name+'/containers/attacker/Xshopfile')
 	shutil.copy2(xshop_path
-		+ "/defaults/Dockerfile-test-target-default",
-		name+'/containers/target/Dockerfile')
+		+ "/defaults/XShopfile-test-target-default",
+		name+'/containers/target/XShopfile')
 
 	os.chdir(name)
 	config.generate_new_config(library)

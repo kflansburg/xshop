@@ -16,7 +16,7 @@ def template_container_dockerfile(config, container):
     """
     template_dict = config.test_vars    
     template_dict.update({'container_name':container})
-    dockerfilepath = "/containers/"+container+"/Dockerfile"
+    dockerfilepath = "/containers/"+container+"/XShopfile"
     Templater = __get_env(config.project_directory)
     template = Templater.get_template(dockerfilepath)
     return template.render(template_dict)
