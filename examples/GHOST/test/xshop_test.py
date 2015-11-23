@@ -1,7 +1,7 @@
 import subprocess
 
-def run(H):
-	H.run('target','run_exploit')
+def run(run_function):
+	run_function('target','run_exploit')
 
 def run_exploit():
 	p = subprocess.Popen(["/usr/local/build/lib/ld-linux-x86-64.so.2","--library-path","/usr/local/build/lib","./GHOST"],stdout=subprocess.PIPE)

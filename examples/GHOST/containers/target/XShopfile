@@ -1,0 +1,15 @@
+FROM xshop:base_test_image
+
+	{% for d in builddeps %}
+		RUN apt-get -y install {{ d }}
+	{% endfor %}
+
+	ADD {{ library }}-{{ version }}.tar.gz /home/
+	RUN sed -r -i 's/(3..89..)/\1 | 4.*/' /home/{{ library }}-{{ version}}/configure
+	RUN mkdir /home/build
+	WORKDIR /home/build
+	RUN mkdir /usr/local/build
+	RUN ../{{ library }}-{{ version }}/configure --prefix=/usr/local/build
+	RUN make -j128
+	RUN make install
+
