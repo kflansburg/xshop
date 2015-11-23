@@ -12,6 +12,9 @@ pip install pyyaml
 echo "	Requests"
 pip install requests
 
+echo "	Docker Compose"
+pip install docker-compose
+
 echo "	XShop:"
 echo "		Copying module to /usr/lib/python2.7/"
 cp -r xshop /usr/lib/python2.7/
