@@ -71,7 +71,7 @@ class Helper:
         required.
         """
         if self.config.test_vars['install_type'] == 'source' and container=='target':
-            subprocess.call('cp -p "%"s .'%(self.config.source_path,),shell=True)
+            subprocess.call('cp -p "%s" .'%(self.config.source_path,),shell=True)
 
 
     def copycontext(self, container):
@@ -79,7 +79,7 @@ class Helper:
         Copies contents of container build context into current folder.
         """
         context = self.config.containers[container]['build_files_directory']
-        subprocess.call('cp -r -p "%s/*" .'%(context,),shell=True)
+        subprocess.call('cp -r -p "%s/"* .'%(context,),shell=True)
 
     def copytestfiles(self):
         """
