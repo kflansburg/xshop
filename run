@@ -88,7 +88,7 @@ elif sys.argv[1] =='publish':
 
     
     print clr.BOLD+"Uploading Project: \t"+clr.ENDC,
-    r = requests.post("http://localhost:3000/vulnerabilities.json", 
+    r = requests.post("https://xshop.gtisc.gatech.edu/vulnerabilities.json", 
         files={'vulnerability[archive]': open('upload.tar.gz', 'rb')}, 
         data={'vulnerability[name]':name,
             'vulnerability[library]':library,
