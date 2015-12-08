@@ -80,50 +80,27 @@ if sys.argv[1] =='export':
         print clr.OKGREEN + "DONE." + clr.ENDC
 
 elif sys.argv[1] =='publish':
-        name = raw_input("Project Name: ")
-        library = raw_input("Library: ")
-        cve = raw_input("Related CVEs (optional, comma separated, no spaces: ")
+    if not os.path.isfile('upload.tar.gz'):
+        print clr.FAIL+"No Project Tarfile Found."+clr.ENDC
+    name = raw_input("Project Name: ")
+    library = raw_input("Library: ")
+    cve = raw_input("Related CVEs (optional, comma separated, no spaces: ")
 
-        print clr.BOLD+"Fetching Upload Information: "+clr.ENDC,
-        # Fetch upload URL
-        r = requests.get('https://xshop-site.herokuapp.com/vulnerabilities/new.json')
-
-        if not r.status_code==200:
-            print clr.FAIL+"FAILED\n"+clr.ENDC+"There was an error contacting the XShop server."
-            
-        else:
-            print clr.OKGREEN+"Done."+clr.ENDC
-            data= json.loads(r.text)
-       
-            upload_url = data['url']
-            folder = data['folder']
-
-            if os.path.isfile('upload.tar.gz'):
-                print clr.BOLD+"Uploading Project: \t"+clr.ENDC,
     
-                r = requests.put(upload_url, data=open('upload.tar.gz', 'rb'))
+    print clr.BOLD+"Uploading Project: \t"+clr.ENDC,
+    r = requests.post("http://localhost:3000/vulnerabilities.json", 
+        files={'vulnerability[archive]': open('upload.tar.gz', 'rb')}, 
+        data={'vulnerability[name]':name,
+            'vulnerability[library]':library,
+            'vulnerability[cve]':cve})
 
-                if r.status_code<300:
-                    print clr.OKGREEN+"Done!"+clr.ENDC
-                    print clr.BOLD+"Publishing Project"+clr.ENDC,
-
-                    r = requests.post('https://xshop-site.herokuapp.com/vulnerabilities.json',
-                        params={'vulnerability[name]':name,
-                            'vulnerability[library]':library,
-                            'vulnerability[cve]':cve,
-                            'vulnerability[folder]':folder})
-                    if r.status_code<300:
-                        print clr.OKGREEN+"Done!"+clr.ENDC
-                        print clr.BOLD+"To edit/delete this posting, please save this password: "+clr.ENDC+json.loads(r.text)['password']
-                    else:
-                        print clr.FAIL+"FAILED\n"+clr.ENDC+"Please try again."
-                    
-                else:
-                    print clr.OKGREEN+"FAILED\n"+clr.ENDC+"Please try again."
-            
-            else:
-                print clr.FAIL+"No Project Tarfile Found."+clr.ENDC
-             
+    if r.status_code<300:
+        print clr.OKGREEN+"Done!"+clr.ENDC
+        print clr.BOLD+"To edit/delete this posting, please save this password: "+clr.ENDC+r.json()['password']
+    else:
+        print clr.FAIL+"FAILED\n"+clr.ENDC+"Please try again. The following errors were reported:"
+        for e in r.json():
+            print "\t"+e
 
 elif sys.argv[1] =='test':
         variables = config.variables()

@@ -250,7 +250,7 @@ def pull_from_site(key):
     and downloads the project files. If multiple matching ID's
     are found, the user is asked to clarify. 
     """
-    response = urllib2.urlopen('https://xshop-site.herokuapp.com/search.json?q=%s'%(key,))
+    response = urllib2.urlopen('https://xshop.gtisc.gatech.edu/search.json?q=%s'%(key,))
     data = json.loads(response.read())
     if len(data)>1:
         project = __resolve_ambiguous_id(data)
